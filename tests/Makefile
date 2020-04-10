@@ -19,17 +19,17 @@ all: $(TARGET)
 omake_phony_0:
 	$(MAKE) debug=$(debug) libtext_utils_static.a -C ..
 
-test_text_utils_INCLUDE := -I../..
+omake_dep_0_INCLUDE := -I../..
 
-test.cpp.test_text_utils.o: test.cpp
-	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC $(test_text_utils_INCLUDE) -c $< -o $@
+test.cpp.omake_dep_0.o: test.cpp
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC $(omake_dep_0_INCLUDE) -c $< -o $@
 
-test_text_utils_OBJS := test.cpp.test_text_utils.o
+test_text_utils_OBJS := test.cpp.omake_dep_0.o
 
 test_text_utils_LIBS := ../libtext_utils_static.a
 
 test_text_utils: $(test_text_utils_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC -o $@ $^ $(test_text_utils_LIBS)
+	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -o $@ $^ $(test_text_utils_LIBS)
 
 clean:
 	rm -f $(TARGET) $(test_text_utils_OBJS)

@@ -22,7 +22,7 @@ text_utils.cpp.omake_dep_0.o: text_utils.cpp
 text_utils_shared_OBJS := text_utils.cpp.omake_dep_0.o
 
 libtext_utils_shared.so: $(text_utils_shared_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^
+	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^
 
 text_utils_static_OBJS := text_utils.cpp.omake_dep_0.o
 

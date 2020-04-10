@@ -1,8 +1,11 @@
 project = CreateProject()
 
+dep = project:CreateDependency()
+dep:AddSourceFiles("*.cpp")
+dep:AddFlags("-Wall", "-Werror", "-Wextra", "-fPIC")
+dep:AddStaticLibrary("..", "text_utils_static")
+
 target = project:CreateBinary("test_text_utils")
-target:AddSourceFiles("*.cpp")
-target:AddFlags("-Wall", "-Werror", "-Wextra", "-fPIC")
-target:AddStaticLibrary("..", "text_utils_static")
+target:AddDependencies(dep)
 
 return project
