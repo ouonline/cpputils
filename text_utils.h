@@ -18,6 +18,9 @@ std::string TextReplace(const char* text, unsigned int tlen,
 bool TextEndsWith(const char* text, unsigned int tlen,
                   const char* suffix, unsigned int slen);
 
+// reutrn the number of chars removed at the end of `text`
+unsigned int TextTrim(const char* text, unsigned int tlen, char c);
+
 }
 
 #endif

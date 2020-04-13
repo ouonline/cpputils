@@ -12,7 +12,7 @@ AR := ar
 
 TARGET := libtext_utils_shared.so libtext_utils_static.a
 
-.PHONY: all clean
+.PHONY: all clean distclean
 
 all: $(TARGET)
 
@@ -22,7 +22,7 @@ text_utils.cpp.omake_dep_0.o: text_utils.cpp
 text_utils_shared_OBJS := text_utils.cpp.omake_dep_0.o
 
 libtext_utils_shared.so: $(text_utils_shared_OBJS)
-	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC -shared -o $@ $^
 
 text_utils_static_OBJS := text_utils.cpp.omake_dep_0.o
 
@@ -31,3 +31,6 @@ libtext_utils_static.a: $(text_utils_static_OBJS)
 
 clean:
 	rm -f $(TARGET) $(text_utils_shared_OBJS) $(text_utils_static_OBJS)
+
+distclean:
+	$(MAKE) clean

@@ -62,4 +62,17 @@ bool TextEndsWith(const char* text, unsigned int tlen,
     return (memcmp(text + tlen - slen, suffix, slen) == 0);
 }
 
+unsigned int TextTrim(const char* text, unsigned int tlen, char c) {
+    unsigned int pos = tlen;
+    while (pos > 0) {
+        --pos;
+        if (text[pos] != c) {
+            ++pos;
+            break;
+        }
+    }
+
+    return (tlen - pos);
+}
+
 }
