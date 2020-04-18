@@ -5,7 +5,7 @@
 #include <string>
 #include <functional>
 
-namespace utils {
+namespace outils {
 
 void TextSplit(const char* str, unsigned int len,
                const char* delim, unsigned int delim_len,

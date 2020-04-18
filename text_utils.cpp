@@ -1,7 +1,7 @@
 #include "text_utils.h"
 using namespace std;
 
-namespace utils {
+namespace outils {
 
 void TextSplit(const char* str, unsigned int len,
                const char* delim, unsigned int delim_len,
