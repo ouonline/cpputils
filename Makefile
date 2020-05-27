@@ -10,7 +10,7 @@ endif
 
 AR := ar
 
-TARGET := libtext_utils_shared.so libtext_utils_static.a
+TARGET := libcpputils_shared.so libcpputils_static.a
 
 .PHONY: all clean distclean
 
@@ -19,18 +19,18 @@ all: $(TARGET)
 omake_dep_0.text_utils.cpp.o: text_utils.cpp
 	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC -c $< -o $@
 
-text_utils_shared_OBJS := omake_dep_0.text_utils.cpp.o
+cpputils_shared_OBJS := omake_dep_0.text_utils.cpp.o
 
-libtext_utils_shared.so: $(text_utils_shared_OBJS)
+libcpputils_shared.so: $(cpputils_shared_OBJS)
 	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^
 
-text_utils_static_OBJS := omake_dep_0.text_utils.cpp.o
+cpputils_static_OBJS := omake_dep_0.text_utils.cpp.o
 
-libtext_utils_static.a: $(text_utils_static_OBJS)
+libcpputils_static.a: $(cpputils_static_OBJS)
 	$(AR) rc $@ $^
 
 clean:
-	rm -f $(TARGET) $(text_utils_shared_OBJS) $(text_utils_static_OBJS)
+	rm -f $(TARGET) $(cpputils_shared_OBJS) $(cpputils_static_OBJS)
 
 distclean:
 	$(MAKE) clean

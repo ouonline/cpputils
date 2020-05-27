@@ -1,5 +1,5 @@
-#ifndef __TEXT_UTILS_H__
-#define __TEXT_UTILS_H__
+#ifndef __CPPUTILS_TEXT_UTILS_H__
+#define __CPPUTILS_TEXT_UTILS_H__
 
 #include <cstring>
 #include <string>

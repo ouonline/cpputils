@@ -8,7 +8,7 @@ else
 	CXXFLAGS += -O2 -DNDEBUG
 endif
 
-TARGET := test_text_utils
+TARGET := test_cpp_utils
 
 .PHONY: all clean distclean
 
@@ -16,22 +16,22 @@ all: $(TARGET)
 
 .PHONY: omake_phony_0
 omake_phony_0:
-	$(MAKE) debug=$(debug) libtext_utils_static.a -C ..
+	$(MAKE) debug=$(debug) libcpputils_static.a -C ..
 
 omake_dep_0_INCLUDE := -I../..
 
 omake_dep_0.test.cpp.o: test.cpp
 	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra $(omake_dep_0_INCLUDE) -c $< -o $@
 
-test_text_utils_OBJS := omake_dep_0.test.cpp.o
+test_cpp_utils_OBJS := omake_dep_0.test.cpp.o
 
-test_text_utils_LIBS := ../libtext_utils_static.a
+test_cpp_utils_LIBS := ../libcpputils_static.a
 
-test_text_utils: $(test_text_utils_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_text_utils_LIBS)
+test_cpp_utils: $(test_cpp_utils_OBJS) | omake_phony_0
+	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_cpp_utils_LIBS)
 
 clean:
-	rm -f $(TARGET) $(test_text_utils_OBJS)
+	rm -f $(TARGET) $(test_cpp_utils_OBJS)
 
 distclean:
 	$(MAKE) clean
