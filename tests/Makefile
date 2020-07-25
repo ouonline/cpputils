@@ -8,7 +8,7 @@ else
 	CXXFLAGS += -O2 -DNDEBUG
 endif
 
-TARGET := test_cpp_utils
+TARGET := test_skiplist_set test_text_utils
 
 .PHONY: all clean distclean
 
@@ -18,20 +18,32 @@ all: $(TARGET)
 omake_phony_0:
 	$(MAKE) debug=$(debug) libcpputils_static.a -C ..
 
+omake_dep_1_INCLUDE := -I../..
+
+omake_dep_1.test_skiplist_set.cpp.o: test_skiplist_set.cpp
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra $(omake_dep_1_INCLUDE) -c $< -o $@
+
+test_skiplist_set_OBJS := omake_dep_1.test_skiplist_set.cpp.o
+
+test_skiplist_set_LIBS := ../libcpputils_static.a ../../utils/libutils_static.a
+
+test_skiplist_set: $(test_skiplist_set_OBJS) | omake_phony_0
+	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_skiplist_set_LIBS)
+
 omake_dep_0_INCLUDE := -I../..
 
-omake_dep_0.test.cpp.o: test.cpp
+omake_dep_0.test_text_utils.cpp.o: test_text_utils.cpp
 	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra $(omake_dep_0_INCLUDE) -c $< -o $@
 
-test_cpp_utils_OBJS := omake_dep_0.test.cpp.o
+test_text_utils_OBJS := omake_dep_0.test_text_utils.cpp.o
 
-test_cpp_utils_LIBS := ../libcpputils_static.a
+test_text_utils_LIBS := ../libcpputils_static.a ../../utils/libutils_static.a
 
-test_cpp_utils: $(test_cpp_utils_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_cpp_utils_LIBS)
+test_text_utils: $(test_text_utils_OBJS) | omake_phony_0
+	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_text_utils_LIBS)
 
 clean:
-	rm -f $(TARGET) $(test_cpp_utils_OBJS)
+	rm -f $(TARGET) $(test_skiplist_set_OBJS) $(test_text_utils_OBJS)
 
 distclean:
 	$(MAKE) clean
