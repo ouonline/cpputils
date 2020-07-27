@@ -16,25 +16,17 @@ TARGET := libcpputils_shared.so libcpputils_static.a
 
 all: $(TARGET)
 
-.PHONY: omake_phony_0
-omake_phony_0:
-	$(MAKE) debug=$(debug) libutils_static.a -C ../utils
-
-omake_dep_0_INCLUDE := -I..
-
 omake_dep_0.text_utils.cpp.o: text_utils.cpp
-	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC $(omake_dep_0_INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC -c $< -o $@
 
 cpputils_shared_OBJS := omake_dep_0.text_utils.cpp.o
 
-cpputils_shared_LIBS := ../utils/libutils_static.a
-
-libcpputils_shared.so: $(cpputils_shared_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^ $(cpputils_shared_LIBS)
+libcpputils_shared.so: $(cpputils_shared_OBJS)
+	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^
 
 cpputils_static_OBJS := omake_dep_0.text_utils.cpp.o
 
-libcpputils_static.a: $(cpputils_static_OBJS) | omake_phony_0
+libcpputils_static.a: $(cpputils_static_OBJS)
 	$(AR) rc $@ $^
 
 clean:
@@ -42,4 +34,3 @@ clean:
 
 distclean:
 	$(MAKE) clean
-	$(MAKE) distclean -C ../utils

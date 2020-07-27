@@ -2,7 +2,6 @@ project = CreateProject()
 
 dep = project:CreateDependency()
     :AddSourceFiles("*.cpp")
-    :AddStaticLibrary("../utils", "utils_static")
     :AddFlags("-Wall", "-Werror", "-Wextra", "-fPIC")
 
 project:CreateStaticLibrary("cpputils_static"):AddDependencies(dep)

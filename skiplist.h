@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
-#include "utils/utils.h"
 using namespace std;
 
 namespace outils {
@@ -17,20 +16,15 @@ private:
     static constexpr int SKIPLIST_RAND_MAX = (RAND_MAX >> 2);
 
 private:
-    struct Node final {
-        uint32_t level;
-        Node* forward[0];
-    };
-
     struct DataNode final {
-        Value value;
-        Node node;
-    };
+        uintptr_t level;
+        DataNode* forward[0];
+    } __attribute__((aligned(sizeof(uintptr_t))));
 
     struct HeadNode final {
-        uint32_t level;
-        Node* forward[SKIPLIST_MAX_LEVEL];
-    };
+        uintptr_t level;
+        DataNode* forward[SKIPLIST_MAX_LEVEL];
+    } __attribute__((aligned(sizeof(uintptr_t))));
 
 public:
     SkipList() {
@@ -38,49 +32,46 @@ public:
     }
 
     ~SkipList() {
-        Node* cur = m_head.forward[0];
-        Node* next = nullptr;
+        DataNode* cur = m_head.forward[0];
+        DataNode* next = nullptr;
         while (cur) {
             next = cur->forward[0];
-            auto data_node = container_of(cur, DataNode, node);
-            data_node->~DataNode();
-            free(data_node);
+            auto pvalue = GetValueFromNode(cur);
+            pvalue->~Value();
+            free(cur);
             cur = next;
         }
     }
 
-    std::pair<Value*, bool> Insert(const Value& value, bool allow_multi_values = false) {
-        Node* update[SKIPLIST_MAX_LEVEL];
+    std::pair<Value*, bool> Insert(const Value& value) {
+        DataNode* update[SKIPLIST_MAX_LEVEL];
         const Key& key = m_get_key(value);
-        auto node = InternalLookupGreaterOrEqual(key, [&update] (uint32_t level, const Node* x) {
-            update[level] = const_cast<Node*>(x);
+        auto node = InnerLookupGreaterOrEqual(key, [&update] (uint32_t level, const DataNode* x) {
+            update[level] = const_cast<DataNode*>(x);
         });
-        if (!allow_multi_values) {
-            if (node) {
-                auto data_node = container_of(node, DataNode, node);
-                if (!m_cmp(key, m_get_key(data_node->value))) {
-                    return std::pair<Value*, bool>(&data_node->value, false);
-                }
+        if (node) {
+            auto pvalue = GetValueFromNode(node);
+            if (!m_cmp(key, m_get_key(*pvalue))) {
+                return std::pair<Value*, bool>(pvalue, false);
             }
         }
 
-        node = InsertNode(value, update);
+        node = InnerInsert(value, update);
         if (node) {
-            auto data_node = container_of(node, DataNode, node);
-            return std::pair<Value*, bool>(&data_node->value, true);
+            return std::pair<Value*, bool>(GetValueFromNode(node), true);
         }
 
         return std::pair<Value*, bool>(nullptr, false);
     }
 
     bool Remove(const Key& key, Value* value = nullptr) {
-        return InternalRemove(key, value, [this, &key] (const Key& node_key) -> bool {
+        return InnerRemove(key, value, [this, &key] (const Key& node_key) -> bool {
             return !m_cmp(key, node_key);
         });
     }
 
     bool RemoveGreaterOrEqual(const Key& key, Value* value = nullptr) {
-        return InternalRemove(key, value, [] (const Key&) -> bool {
+        return InnerRemove(key, value, [] (const Key&) -> bool {
             return true;
         });
     }
@@ -88,44 +79,62 @@ public:
     void ForEach(const std::function<bool (const Value&)>& f) const {
         auto node = m_head.forward[0];
         while (node) {
-            auto data_node = container_of(node, DataNode, node);
-            if (!f(data_node->value)) {
+            auto pvalue = GetValueFromNode(node);
+            if (!f(*pvalue)) {
                 return;
             }
             node = node->forward[0];
         }
     }
 
-    Value* Lookup(const Key& key) const {
-        auto node = InternalLookupGreaterOrEqual(key, [] (uint32_t, const Node*) {});
+    Value* Lookup(const Key& key) {
+        auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
         if (node) {
-            auto data_node = container_of(node, DataNode, node);
-            if (!m_cmp(key, m_get_key(data_node->value))) {
-                return &data_node->value;
+            auto pvalue = GetValueFromNode(node);
+            if (!m_cmp(key, m_get_key(*pvalue))) {
+                return pvalue;
             }
         }
         return nullptr;
     }
 
-    Value* LookupGreaterOrEqual(const Key& key) const {
-        auto node = InternalLookupGreaterOrEqual(key, [] (uint32_t, const Node*) {});
+    const Value* Lookup(const Key& key) const {
+        return const_cast<SkipList*>(this)->Lookup(key);
+    }
+
+    Value* LookupGreaterOrEqual(const Key& key) {
+        auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
         if (node) {
-            auto data_node = container_of(node, DataNode, node);
-            return &data_node->value;
+            return GetValueFromNode(node);
         }
         return nullptr;
     }
 
+    const Value* LookupGreaterOrEqual(const Key& key) const {
+        return const_cast<SkipList*>(this)->LookupGreaterOrEqual(key);
+    }
+
+    Value* LookupPrev(const Key& key) {
+        auto prev = InnerLookupPrev(key, [] (uint32_t, const DataNode*) {});
+        if (prev == (DataNode*)(&m_head)) {
+            return nullptr;
+        }
+        return GetValueFromNode(prev);
+    }
+
+    const Value* LookupPrev(const Key& key) const {
+        return const_cast<SkipList*>(this)->LookupPrev(key);
+    }
+
 private:
-    Node* InternalLookupGreaterOrEqual(const Key& key,
-                                       const std::function<void (uint32_t, const Node*)>& f) const {
-        auto prev = (Node*)(&m_head);
+    DataNode* InnerLookupPrev(const Key& key,
+                              const std::function<void (uint32_t, const DataNode*)>& f) const {
+        auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
             uint32_t level = l - 1;
             auto node = prev->forward[level];
             while (node) {
-                auto data_node = container_of(node, DataNode, node);
-                if (!m_cmp(m_get_key(data_node->value), key)) {
+                if (!m_cmp(m_get_key(*GetValueFromNode(node)), key)) {
                     break;
                 }
                 prev = node;
@@ -135,19 +144,25 @@ private:
             f(level, prev);
         }
 
+        return prev;
+    }
+
+    DataNode* InnerLookupGreaterOrEqual(const Key& key,
+                                        const std::function<void (uint32_t, const DataNode*)>& f) const {
+        auto prev = InnerLookupPrev(key, f);
         return prev->forward[0];
     }
 
-    bool InternalRemove(const Key& key, Value* value,
-                        const std::function<bool (const Key& node_key)>& should_remove) {
-        Node* update[SKIPLIST_MAX_LEVEL];
-        auto node = InternalLookupGreaterOrEqual(key, [&] (uint32_t level, const Node* x) {
-            update[level] = const_cast<Node*>(x);
+    bool InnerRemove(const Key& key, Value* value,
+                     const std::function<bool (const Key& node_key)>& should_remove) {
+        DataNode* update[SKIPLIST_MAX_LEVEL];
+        auto node = InnerLookupGreaterOrEqual(key, [&update] (uint32_t level, const DataNode* x) {
+            update[level] = const_cast<DataNode*>(x);
         });
 
         if (node) {
-            auto data_node = container_of(node, DataNode, node);
-            if (should_remove(m_get_key(data_node->value))) {
+            auto pvalue = GetValueFromNode(node);
+            if (should_remove(m_get_key(*pvalue))) {
                 for (uint32_t level = 0; level < m_head.level; ++level) {
                     if (update[level]->forward[level] != node) {
                         break;
@@ -156,13 +171,13 @@ private:
                 }
 
                 if (value) {
-                    *value = data_node->value;
+                    *value = *pvalue;
                 }
 
-                data_node->~DataNode();
-                free(data_node);
+                pvalue->~Value();
+                free(node);
 
-                while (m_head.level > 0 && !m_head.forward[m_head.level]) {
+                while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
                     --m_head.level;
                 }
 
@@ -173,27 +188,28 @@ private:
         return false;
     }
 
-    Node* InsertNode(const Value& value, Node* update[]) {
+    DataNode* InnerInsert(const Value& value, DataNode* update[]) {
         uint32_t level = GenRandomLevel();
 
-        auto data_node = (DataNode*)malloc(sizeof(DataNode) + sizeof(Node*) * level);
-        if (!data_node) {
+        auto node = (DataNode*)aligned_alloc(sizeof(uintptr_t),
+                                             sizeof(DataNode) +
+                                             (sizeof(DataNode*) * level) +
+                                             Align(sizeof(Value), sizeof(uintptr_t)));
+        if (!node) {
             return nullptr;
         }
 
-        new (data_node) DataNode();
-        data_node->value = value;
-        data_node->node.level = level;
-        memset(data_node->node.forward, 0, sizeof(Node*) * level);
+        node->level = level;
+        memset(node->forward, 0, sizeof(DataNode*) * level);
+        new (GetValueFromNode(node)) Value(value);
 
         if (level > m_head.level) {
             for (uint32_t i = m_head.level; i < level; ++i) {
-                update[i] = (Node*)(&m_head);
+                update[i] = (DataNode*)(&m_head);
             }
             m_head.level = level;
         }
 
-        auto node = &data_node->node;
         for (uint32_t i = 0; i < level; ++i) {
             node->forward[i] = update[i]->forward[i];
             update[i]->forward[i] = node;
@@ -202,12 +218,24 @@ private:
         return node;
     }
 
-    int GenRandomLevel() {
+    uint32_t GenRandomLevel() const {
         uint32_t level = 1;
         while (level < SKIPLIST_MAX_LEVEL && rand() < SKIPLIST_RAND_MAX) {
             ++level;
         }
         return level;
+    }
+
+    Value* GetValueFromNode(const DataNode* node) {
+        return (Value*)((char*)node + sizeof(DataNode) + sizeof(DataNode*) * node->level);
+    }
+
+    const Value* GetValueFromNode(const DataNode* node) const {
+        return const_cast<SkipList*>(this)->GetValueFromNode(node);
+    }
+
+    static uint64_t Align(uint64_t n, uint32_t alignment) {
+        return ((n + alignment - 1) & (~(alignment - 1)));
     }
 
 private:
@@ -226,7 +254,7 @@ private:
 
 /* -------------------------------------------------------------------------- */
 
-namespace {
+namespace internal {
 
 template <typename Value>
 struct SkipListReturnSelfFromValue final {
@@ -245,13 +273,12 @@ struct SkipListReturnFirstOfPair final {
 }
 
 template <typename Value, typename Comparator = std::less<Value>>
-using SkipListSet = SkipList<Value, Value, Comparator, SkipListReturnSelfFromValue<Value>>;
+using SkipListSet = SkipList<Value, Value, Comparator,
+                             internal::SkipListReturnSelfFromValue<Value>>;
 
 template <typename Key, typename Value, typename Comparator = std::less<Key>>
-using SkipListMap = SkipList<Key,
-                             std::pair<Key, Value>,
-                             Comparator,
-                             SkipListReturnFirstOfPair<Key, Value>>;
+using SkipListMap = SkipList<Key, std::pair<Key, Value>, Comparator,
+                             internal::SkipListReturnFirstOfPair<Key, Value>>;
 
 }
 

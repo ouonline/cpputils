@@ -6,9 +6,9 @@ project:CreateBinary("test_text_utils"):AddDependencies(
         :AddFlags("-Wall", "-Werror", "-Wextra")
         :AddStaticLibrary("..", "cpputils_static"))
 
-project:CreateBinary("test_skiplist_set"):AddDependencies(
+project:CreateBinary("test_skiplist"):AddDependencies(
     project:CreateDependency()
-        :AddSourceFiles("test_skiplist_set.cpp")
+        :AddSourceFiles("test_skiplist.cpp")
         :AddFlags("-Wall", "-Werror", "-Wextra")
         :AddStaticLibrary("..", "cpputils_static"))
 
