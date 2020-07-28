@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <functional>
-using namespace std;
 
 namespace outils {
 
