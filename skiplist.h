@@ -31,15 +31,7 @@ public:
     }
 
     ~SkipList() {
-        DataNode* cur = m_head.forward[0];
-        DataNode* next = nullptr;
-        while (cur) {
-            next = cur->forward[0];
-            auto pvalue = GetValueFromNode(cur);
-            pvalue->~Value();
-            free(cur);
-            cur = next;
-        }
+        InnerClear();
     }
 
     std::pair<Value*, bool> Insert(const Value& value) {
@@ -75,6 +67,11 @@ public:
         });
     }
 
+    void Clear() {
+        InnerClear();
+        memset(&m_head, 0, sizeof(HeadNode));
+    }
+
     void ForEach(const std::function<bool (const Value&)>& f) const {
         auto node = m_head.forward[0];
         while (node) {
@@ -86,7 +83,7 @@ public:
         }
     }
 
-    Value* Lookup(const Key& key) {
+    Value* Lookup(const Key& key) const {
         auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
         if (node) {
             auto pvalue = GetValueFromNode(node);
@@ -97,11 +94,7 @@ public:
         return nullptr;
     }
 
-    const Value* Lookup(const Key& key) const {
-        return const_cast<SkipList*>(this)->Lookup(key);
-    }
-
-    Value* LookupGreaterOrEqual(const Key& key) {
+    Value* LookupGreaterOrEqual(const Key& key) const {
         auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
         if (node) {
             return GetValueFromNode(node);
@@ -109,11 +102,7 @@ public:
         return nullptr;
     }
 
-    const Value* LookupGreaterOrEqual(const Key& key) const {
-        return const_cast<SkipList*>(this)->LookupGreaterOrEqual(key);
-    }
-
-    Value* LookupPrev(const Key& key) {
+    Value* LookupPrev(const Key& key) const {
         auto prev = InnerLookupPrev(key, [] (uint32_t, const DataNode*) {});
         if (prev == (DataNode*)(&m_head)) {
             return nullptr;
@@ -121,8 +110,8 @@ public:
         return GetValueFromNode(prev);
     }
 
-    const Value* LookupPrev(const Key& key) const {
-        return const_cast<SkipList*>(this)->LookupPrev(key);
+    bool IsEmpty() const {
+        return (m_head.level == 0);
     }
 
 private:
@@ -217,6 +206,18 @@ private:
         return node;
     }
 
+    void InnerClear() {
+        DataNode* cur = m_head.forward[0];
+        DataNode* next = nullptr;
+        while (cur) {
+            next = cur->forward[0];
+            auto pvalue = GetValueFromNode(cur);
+            pvalue->~Value();
+            free(cur);
+            cur = next;
+        }
+    }
+
     uint32_t GenRandomLevel() const {
         uint32_t level = 1;
         while (level < SKIPLIST_MAX_LEVEL && rand() < SKIPLIST_RAND_MAX) {
@@ -225,15 +226,11 @@ private:
         return level;
     }
 
-    Value* GetValueFromNode(const DataNode* node) {
+    Value* GetValueFromNode(const DataNode* node) const {
         return (Value*)((char*)node + sizeof(DataNode) + sizeof(DataNode*) * node->level);
     }
 
-    const Value* GetValueFromNode(const DataNode* node) const {
-        return const_cast<SkipList*>(this)->GetValueFromNode(node);
-    }
-
-    static uint64_t Align(uint64_t n, uint32_t alignment) {
+    uint64_t Align(uint64_t n, uint32_t alignment) const {
         return ((n + alignment - 1) & (~(alignment - 1)));
     }
 

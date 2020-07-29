@@ -5,8 +5,14 @@
 using namespace std;
 using namespace outils;
 
-static void test_skiplist_set(void) {
-    cout << "----------- test_skiplist_set ----------" << endl;
+static void TestConst(const SkipListSet<int>& sl) {
+    int* value = sl.Lookup(50);
+    ASSERT_TRUE(value != nullptr);
+    ASSERT_EQ(*value, 50);
+}
+
+static void TestSkipListSet(void) {
+    cout << "----------- TestSkipListSet ----------" << endl;
 
     srand(time(nullptr));
 
@@ -19,6 +25,8 @@ static void test_skiplist_set(void) {
         auto ret_pair = sl.Insert(i);
         ASSERT_TRUE(!ret_pair.second);
     }
+
+    TestConst(sl);
 
     auto value = sl.Lookup(50);
     ASSERT_TRUE(value != nullptr);
@@ -35,10 +43,12 @@ static void test_skiplist_set(void) {
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);
     ASSERT_EQ(ret, 30);
+
+    cout << "    ----- test func end -----" << endl;
 }
 
-static void test_skiplist_map(void) {
-    cout << "--------- test_skiplist_map ---------" << endl;
+static void TestSkipListMap(void) {
+    cout << "--------- TestSkipListMap ---------" << endl;
 
     SkipListMap<int, set<int>> sl;
     for (int i = 0; i < 100; i += 10) {
@@ -58,13 +68,21 @@ static void test_skiplist_map(void) {
         return true;
     });
     cout << "    ----- end -----" << endl;
+
+    cout << "    ----- test func end -----" << endl;
 }
 
-static void test_skiplist_map2(void) {
-    cout << "--------- test_skiplist_map2 ---------" << endl;
+static void TestSkipListMap2(void) {
+    cout << "--------- TestSkipListMap2 ---------" << endl;
 
     struct TestValue {
-        TestValue(int _a = 5) : a(_a) {}
+        TestValue(int _a = 5) : a(_a) {
+            cout << "construct a = " << a << endl;
+        }
+        TestValue(const TestValue& t) {
+            a = t.a;
+            cout << "copy construct a = " << t.a << endl;
+        }
         ~TestValue() { cout << "destroy TestValue[" << a << "]" << endl; }
         int a;
     };
@@ -81,11 +99,21 @@ static void test_skiplist_map2(void) {
         return true;
     });
     cout << "    ----- end -----" << endl;
+
+    sl.Clear();
+    ASSERT_TRUE(sl.IsEmpty());
+
+    for (int i = 0; i < 100; i += 10) {
+        auto ret_pair = sl.Insert(std::pair<int, TestValue>(i, TestValue(i)));
+        ASSERT_TRUE(ret_pair.second);
+    }
+
+    cout << "    ----- test func end -----" << endl;
 }
 
 int main(void) {
-    test_skiplist_set();
-    test_skiplist_map();
-    test_skiplist_map2();
+    TestSkipListSet();
+    TestSkipListMap();
+    TestSkipListMap2();
     return 0;
 }
