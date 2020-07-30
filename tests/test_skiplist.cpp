@@ -40,6 +40,9 @@ static void TestSkipListSet(void) {
     value = sl.LookupGreaterOrEqual(21);
     ASSERT_EQ(*value, 30);
 
+    value = sl.LookupPrev(21);
+    ASSERT_EQ(*value, 10);
+
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);
     ASSERT_EQ(ret, 30);
@@ -49,31 +52,6 @@ static void TestSkipListSet(void) {
 
 static void TestSkipListMap(void) {
     cout << "--------- TestSkipListMap ---------" << endl;
-
-    SkipListMap<int, set<int>> sl;
-    for (int i = 0; i < 100; i += 10) {
-        auto ret_pair = sl.Insert(std::make_pair(i, set<int>()));
-        ret_pair.first->second.insert(i + 5);
-        ret_pair.first->second.insert(i + 10);
-        ASSERT_TRUE(ret_pair.second);
-    }
-
-    cout << "    ----- begin -----" << endl;
-    sl.ForEach([] (const pair<int, set<int>>& p) -> bool {
-        cout << "    " << p.first << " :";
-        for (auto x : p.second) {
-            cout << " " << x;
-        }
-        cout << endl;
-        return true;
-    });
-    cout << "    ----- end -----" << endl;
-
-    cout << "    ----- test func end -----" << endl;
-}
-
-static void TestSkipListMap2(void) {
-    cout << "--------- TestSkipListMap2 ---------" << endl;
 
     struct TestValue {
         TestValue(int _a = 5) : a(_a) {
@@ -100,6 +78,8 @@ static void TestSkipListMap2(void) {
     });
     cout << "    ----- end -----" << endl;
 
+    sl.Remove(20);
+
     sl.Clear();
     ASSERT_TRUE(sl.IsEmpty());
 
@@ -114,6 +94,5 @@ static void TestSkipListMap2(void) {
 int main(void) {
     TestSkipListSet();
     TestSkipListMap();
-    TestSkipListMap2();
     return 0;
 }

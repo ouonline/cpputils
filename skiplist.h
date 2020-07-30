@@ -8,7 +8,7 @@
 
 namespace outils {
 
-template <typename Key, typename Value, typename Comparator, typename GetKeyFromValue>
+template <typename Key, typename Value, typename LessComparator, typename GetKeyFromValue>
 class SkipList final {
 private:
     static constexpr uint32_t SKIPLIST_MAX_LEVEL = 8;
@@ -31,18 +31,16 @@ public:
     }
 
     ~SkipList() {
-        InnerClear();
+        InnerDestroy();
     }
 
     std::pair<Value*, bool> Insert(const Value& value) {
         DataNode* update[SKIPLIST_MAX_LEVEL];
         const Key& key = m_get_key(value);
-        auto node = InnerLookupGreaterOrEqual(key, [&update] (uint32_t level, const DataNode* x) {
-            update[level] = const_cast<DataNode*>(x);
-        });
+        auto node = InnerLookupGreaterOrEqual(key, update);
         if (node) {
             auto pvalue = GetValueFromNode(node);
-            if (!m_cmp(key, m_get_key(*pvalue))) {
+            if (!m_less(key, m_get_key(*pvalue))) {
                 return std::pair<Value*, bool>(pvalue, false);
             }
         }
@@ -56,8 +54,8 @@ public:
     }
 
     bool Remove(const Key& key, Value* value = nullptr) {
-        return InnerRemove(key, value, [this, &key] (const Key& node_key) -> bool {
-            return !m_cmp(key, node_key);
+        return InnerRemove(key, value, [this, &key] (const Key& greater_or_equal_key) -> bool {
+            return (!m_less(key, greater_or_equal_key));
         });
     }
 
@@ -68,7 +66,7 @@ public:
     }
 
     void Clear() {
-        InnerClear();
+        InnerDestroy();
         memset(&m_head, 0, sizeof(HeadNode));
     }
 
@@ -84,10 +82,10 @@ public:
     }
 
     Value* Lookup(const Key& key) const {
-        auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
+        auto node = InnerLookupGreaterOrEqual(key);
         if (node) {
             auto pvalue = GetValueFromNode(node);
-            if (!m_cmp(key, m_get_key(*pvalue))) {
+            if (!m_less(key, m_get_key(*pvalue))) {
                 return pvalue;
             }
         }
@@ -95,7 +93,7 @@ public:
     }
 
     Value* LookupGreaterOrEqual(const Key& key) const {
-        auto node = InnerLookupGreaterOrEqual(key, [] (uint32_t, const DataNode*) {});
+        auto node = InnerLookupGreaterOrEqual(key);
         if (node) {
             return GetValueFromNode(node);
         }
@@ -103,7 +101,7 @@ public:
     }
 
     Value* LookupPrev(const Key& key) const {
-        auto prev = InnerLookupPrev(key, [] (uint32_t, const DataNode*) {});
+        auto prev = InnerLookupPrev(key);
         if (prev == (DataNode*)(&m_head)) {
             return nullptr;
         }
@@ -115,65 +113,65 @@ public:
     }
 
 private:
-    DataNode* InnerLookupPrev(const Key& key,
-                              const std::function<void (uint32_t, const DataNode*)>& f) const {
+    DataNode* InnerLookupPrev(const Key& key, DataNode** update = nullptr) const {
         auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
             uint32_t level = l - 1;
             auto node = prev->forward[level];
             while (node) {
-                if (!m_cmp(m_get_key(*GetValueFromNode(node)), key)) {
+                auto pvalue = GetValueFromNode(node);
+                if (!m_less(m_get_key(*pvalue), key)) {
                     break;
                 }
                 prev = node;
                 node = node->forward[level];
             }
 
-            f(level, prev);
+            if (update) {
+                update[level] = prev;
+            }
         }
 
         return prev;
     }
 
-    DataNode* InnerLookupGreaterOrEqual(const Key& key,
-                                        const std::function<void (uint32_t, const DataNode*)>& f) const {
-        auto prev = InnerLookupPrev(key, f);
+    DataNode* InnerLookupGreaterOrEqual(const Key& key, DataNode** update = nullptr) const {
+        auto prev = InnerLookupPrev(key, update);
         return prev->forward[0];
     }
 
     bool InnerRemove(const Key& key, Value* value,
-                     const std::function<bool (const Key& node_key)>& should_remove) {
+                     const std::function<bool (const Key& greater_or_equal_key)>& should_remove) {
         DataNode* update[SKIPLIST_MAX_LEVEL];
-        auto node = InnerLookupGreaterOrEqual(key, [&update] (uint32_t level, const DataNode* x) {
-            update[level] = const_cast<DataNode*>(x);
-        });
-
-        if (node) {
-            auto pvalue = GetValueFromNode(node);
-            if (should_remove(m_get_key(*pvalue))) {
-                for (uint32_t level = 0; level < m_head.level; ++level) {
-                    if (update[level]->forward[level] != node) {
-                        break;
-                    }
-                    update[level]->forward[level] = node->forward[level];
-                }
-
-                if (value) {
-                    *value = *pvalue;
-                }
-
-                pvalue->~Value();
-                free(node);
-
-                while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
-                    --m_head.level;
-                }
-
-                return true;
-            }
+        auto node = InnerLookupGreaterOrEqual(key, update);
+        if (!node) {
+            return false;
         }
 
-        return false;
+        auto pvalue = GetValueFromNode(node);
+        if (!should_remove(m_get_key(*pvalue))) {
+            return false;
+        }
+
+        for (uint32_t level = 0; level < m_head.level; ++level) {
+            if (update[level]->forward[level] != node) {
+                break;
+            }
+            update[level]->forward[level] = node->forward[level];
+        }
+
+        if (value) {
+            *value = *pvalue;
+        }
+
+        pvalue->~Value();
+        free(node);
+
+        while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
+            --m_head.level;
+        }
+
+        return true;
     }
 
     DataNode* InnerInsert(const Value& value, DataNode* update[]) {
@@ -206,7 +204,7 @@ private:
         return node;
     }
 
-    void InnerClear() {
+    void InnerDestroy() {
         DataNode* cur = m_head.forward[0];
         DataNode* next = nullptr;
         while (cur) {
@@ -236,7 +234,7 @@ private:
 
 private:
     HeadNode m_head;
-    Comparator m_cmp;
+    LessComparator m_less;
     GetKeyFromValue m_get_key;
 
 public:
@@ -268,12 +266,12 @@ struct SkipListReturnFirstOfPair final {
 
 }
 
-template <typename Value, typename Comparator = std::less<Value>>
-using SkipListSet = SkipList<Value, Value, Comparator,
+template <typename Value, typename LessComparator = std::less<Value>>
+using SkipListSet = SkipList<Value, Value, LessComparator,
                              internal::SkipListReturnSelfFromValue<Value>>;
 
-template <typename Key, typename Value, typename Comparator = std::less<Key>>
-using SkipListMap = SkipList<Key, std::pair<Key, Value>, Comparator,
+template <typename Key, typename Value, typename LessComparator = std::less<Key>>
+using SkipListMap = SkipList<Key, std::pair<Key, Value>, LessComparator,
                              internal::SkipListReturnFirstOfPair<Key, Value>>;
 
 }
