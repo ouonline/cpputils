@@ -26,6 +26,40 @@ private:
     } __attribute__((aligned(sizeof(uintptr_t))));
 
 public:
+    class Iterator final {
+    public:
+        Iterator() : m_node(nullptr) {}
+        Value* operator-> () {
+            return GetValueFromNode(m_node);
+        }
+        const Value* operator-> () const {
+            return GetValueFromNode(m_node);
+        }
+        Value& operator* () {
+            return *GetValueFromNode(m_node);
+        }
+        const Value& operator* () const {
+            return *GetValueFromNode(m_node);
+        }
+        bool operator== (const Iterator& it) const {
+            return (m_node == it.m_node);
+        }
+        bool operator!= (const Iterator& it) const {
+            return (m_node != it.m_node);
+        }
+        void operator++ () {
+            m_node = m_node->forward[0];
+        }
+
+    private:
+        friend class SkipList;
+        Iterator(DataNode* node) : m_node(node) {}
+
+    private:
+        DataNode* m_node;
+    };
+
+public:
     SkipList() {
         memset(&m_head, 0, sizeof(HeadNode));
     }
@@ -34,23 +68,20 @@ public:
         InnerDestroy();
     }
 
-    std::pair<Value*, bool> Insert(const Value& value) {
-        DataNode* update[SKIPLIST_MAX_LEVEL];
+    std::pair<Iterator, bool> Insert(const Value& value) {
         const Key& key = m_get_key(value);
+        DataNode* update[SKIPLIST_MAX_LEVEL];
+
         auto node = InnerLookupGreaterOrEqual(key, update);
         if (node) {
             auto pvalue = GetValueFromNode(node);
             if (!m_less(key, m_get_key(*pvalue))) {
-                return std::pair<Value*, bool>(pvalue, false);
+                return std::pair<Iterator, bool>(Iterator(node), false);
             }
         }
 
         node = InnerInsert(value, update);
-        if (node) {
-            return std::pair<Value*, bool>(GetValueFromNode(node), true);
-        }
-
-        return std::pair<Value*, bool>(nullptr, false);
+        return std::pair<Iterator, bool>(Iterator(node), (node != nullptr));
     }
 
     bool Remove(const Key& key, Value* value = nullptr) {
@@ -70,53 +101,47 @@ public:
         memset(&m_head, 0, sizeof(HeadNode));
     }
 
-    void ForEach(const std::function<bool (const Value&)>& f) const {
-        auto node = m_head.forward[0];
-        while (node) {
-            auto pvalue = GetValueFromNode(node);
-            if (!f(*pvalue)) {
-                return;
-            }
-            node = node->forward[0];
-        }
-    }
-
-    Value* Lookup(const Key& key) const {
+    Iterator Lookup(const Key& key) const {
         auto node = InnerLookupGreaterOrEqual(key);
         if (node) {
             auto pvalue = GetValueFromNode(node);
             if (!m_less(key, m_get_key(*pvalue))) {
-                return pvalue;
+                return Iterator(node);
             }
         }
-        return nullptr;
+        return Iterator();
     }
 
-    Value* LookupGreaterOrEqual(const Key& key) const {
+    Iterator LookupGreaterOrEqual(const Key& key) const {
         auto node = InnerLookupGreaterOrEqual(key);
-        if (node) {
-            return GetValueFromNode(node);
-        }
-        return nullptr;
+        return Iterator(node);
     }
 
-    Value* LookupPrev(const Key& key) const {
+    Iterator LookupPrev(const Key& key) const {
         auto prev = InnerLookupPrev(key);
         if (prev == (DataNode*)(&m_head)) {
-            return nullptr;
+            return Iterator();
         }
-        return GetValueFromNode(prev);
+        return Iterator(prev);
     }
 
     bool IsEmpty() const {
         return (m_head.level == 0);
     }
 
+    Iterator GetBeginIterator() const {
+        return Iterator(m_head.forward[0]);
+    }
+
+    const Iterator& GetEndIterator() const {
+        return m_end_iterator;
+    }
+
 private:
     DataNode* InnerLookupPrev(const Key& key, DataNode** update = nullptr) const {
         auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
-            uint32_t level = l - 1;
+            const uint32_t level = l - 1;
             auto node = prev->forward[level];
             while (node) {
                 auto pvalue = GetValueFromNode(node);
@@ -175,7 +200,7 @@ private:
     }
 
     DataNode* InnerInsert(const Value& value, DataNode* update[]) {
-        uint32_t level = GenRandomLevel();
+        const uint32_t level = GenRandomLevel();
 
         auto node = (DataNode*)aligned_alloc(sizeof(uintptr_t),
                                              sizeof(DataNode) +
@@ -206,9 +231,8 @@ private:
 
     void InnerDestroy() {
         DataNode* cur = m_head.forward[0];
-        DataNode* next = nullptr;
         while (cur) {
-            next = cur->forward[0];
+            auto next = cur->forward[0];
             auto pvalue = GetValueFromNode(cur);
             pvalue->~Value();
             free(cur);
@@ -224,18 +248,19 @@ private:
         return level;
     }
 
-    Value* GetValueFromNode(const DataNode* node) const {
-        return (Value*)((char*)node + sizeof(DataNode) + sizeof(DataNode*) * node->level);
-    }
-
     uint64_t Align(uint64_t n, uint32_t alignment) const {
         return ((n + alignment - 1) & (~(alignment - 1)));
+    }
+
+    static Value* GetValueFromNode(const DataNode* node) {
+        return (Value*)((char*)node + sizeof(DataNode) + sizeof(DataNode*) * node->level);
     }
 
 private:
     HeadNode m_head;
     LessComparator m_less;
     GetKeyFromValue m_get_key;
+    Iterator m_end_iterator;
 
 public:
     SkipList(SkipList&&) = default;

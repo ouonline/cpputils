@@ -6,13 +6,13 @@ using namespace std;
 using namespace outils;
 
 static void TestConst(const SkipListSet<int>& sl) {
-    int* value = sl.Lookup(50);
-    ASSERT_TRUE(value != nullptr);
-    ASSERT_EQ(*value, 50);
+    auto it = sl.Lookup(50);
+    ASSERT_TRUE(it != sl.GetEndIterator());
+    ASSERT_EQ(*it, 50);
 }
 
 static void TestSkipListSet(void) {
-    cout << "----------- TestSkipListSet ----------" << endl;
+    cout << "----- test " << __func__ << " begin -----" << endl;
 
     srand(time(nullptr));
 
@@ -28,30 +28,33 @@ static void TestSkipListSet(void) {
 
     TestConst(sl);
 
-    auto value = sl.Lookup(50);
-    ASSERT_TRUE(value != nullptr);
-    ASSERT_EQ(*value, 50);
+    auto it = sl.Lookup(50);
+    ASSERT_TRUE(it != sl.GetEndIterator());
+    ASSERT_EQ(*it, 50);
 
-    value = sl.Lookup(101);
-    ASSERT_TRUE(value == nullptr);
+    it = sl.Lookup(101);
+    ASSERT_TRUE(it == sl.GetEndIterator());
 
     sl.Remove(20);
 
-    value = sl.LookupGreaterOrEqual(21);
-    ASSERT_EQ(*value, 30);
+    it = sl.LookupGreaterOrEqual(21);
+    ASSERT_EQ(*it, 30);
 
-    value = sl.LookupPrev(21);
-    ASSERT_EQ(*value, 10);
+    it = sl.LookupPrev(21);
+    ASSERT_EQ(*it, 10);
 
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);
     ASSERT_EQ(ret, 30);
 
-    cout << "    ----- test func end -----" << endl;
+    for (auto it = sl.GetBeginIterator(); it != sl.GetEndIterator(); ++it) {
+        cout << "    " << *it << endl;
+    }
+    cout << "----- test " << __func__ << " end -----" << endl;
 }
 
 static void TestSkipListMap(void) {
-    cout << "--------- TestSkipListMap ---------" << endl;
+    cout << "----- test " << __func__ << " begin -----" << endl;
 
     struct TestValue {
         TestValue(int _a = 5) : a(_a) {
@@ -71,13 +74,6 @@ static void TestSkipListMap(void) {
         ASSERT_TRUE(ret_pair.second);
     }
 
-    cout << "    ----- begin -----" << endl;
-    sl.ForEach([] (const pair<int, TestValue>& p) -> bool {
-        cout << "    " << p.first << " : " << p.second.a << endl;
-        return true;
-    });
-    cout << "    ----- end -----" << endl;
-
     sl.Remove(20);
 
     sl.Clear();
@@ -88,7 +84,7 @@ static void TestSkipListMap(void) {
         ASSERT_TRUE(ret_pair.second);
     }
 
-    cout << "    ----- test func end -----" << endl;
+    cout << "----- test " << __func__ << " end -----" << endl;
 }
 
 int main(void) {
