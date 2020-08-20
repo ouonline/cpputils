@@ -1,29 +1,30 @@
 #ifndef __CPPUTILS_SKIPLIST_H__
 #define __CPPUTILS_SKIPLIST_H__
 
+#include "default_allocator.h"
+#include "math/xoshiro256ss.h"
 #include <cstdint>
-#include <cstdlib>
 #include <cstring>
 #include <functional>
 
 namespace outils {
 
-template <typename Key, typename Value, typename LessComparator, typename GetKeyFromValue>
+template <typename Key, typename Value, typename LessComparator,
+          typename GetKeyFromValue, typename Allocator>
 class SkipList final {
 private:
     static constexpr uint32_t SKIPLIST_MAX_LEVEL = 8;
-    static constexpr int SKIPLIST_RAND_MAX = (RAND_MAX >> 2);
 
 private:
     struct DataNode final {
         uintptr_t level;
         DataNode* forward[0];
-    } __attribute__((aligned(sizeof(uintptr_t))));
+    };
 
     struct HeadNode final {
         uintptr_t level;
         DataNode* forward[SKIPLIST_MAX_LEVEL];
-    } __attribute__((aligned(sizeof(uintptr_t))));
+    };
 
 public:
     class Iterator final {
@@ -60,7 +61,8 @@ public:
     };
 
 public:
-    SkipList() {
+    SkipList(Allocator ar = DefaultAllocator()) : m_allocator(ar) {
+        xoshiro256ss_init(&m_rand, (uintptr_t)this);
         memset(&m_head, 0, sizeof(HeadNode));
     }
 
@@ -190,7 +192,7 @@ private:
         }
 
         pvalue->~Value();
-        free(node);
+        m_allocator.Free(node);
 
         while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
             --m_head.level;
@@ -202,10 +204,9 @@ private:
     DataNode* InnerInsert(const Value& value, DataNode* update[]) {
         const uint32_t level = GenRandomLevel();
 
-        auto node = (DataNode*)aligned_alloc(sizeof(uintptr_t),
-                                             sizeof(DataNode) +
-                                             (sizeof(DataNode*) * level) +
-                                             Align(sizeof(Value), sizeof(uintptr_t)));
+        auto node = (DataNode*)m_allocator.Alloc(sizeof(DataNode) +
+                                                 (sizeof(DataNode*) * level) +
+                                                 Align(sizeof(Value), sizeof(uintptr_t)));
         if (!node) {
             return nullptr;
         }
@@ -235,14 +236,14 @@ private:
             auto next = cur->forward[0];
             auto pvalue = GetValueFromNode(cur);
             pvalue->~Value();
-            free(cur);
+            m_allocator.Free(cur);
             cur = next;
         }
     }
 
     uint32_t GenRandomLevel() const {
         uint32_t level = 1;
-        while (level < SKIPLIST_MAX_LEVEL && rand() < SKIPLIST_RAND_MAX) {
+        while (level < SKIPLIST_MAX_LEVEL && xoshiro256ss_rand(&m_rand) % 4 == 0) {
             ++level;
         }
         return level;
@@ -260,7 +261,9 @@ private:
     HeadNode m_head;
     LessComparator m_less;
     GetKeyFromValue m_get_key;
+    Allocator m_allocator;
     Iterator m_end_iterator;
+    mutable Xoshiro256ss m_rand;
 
 public:
     SkipList(SkipList&&) = default;
@@ -291,13 +294,17 @@ struct SkipListReturnFirstOfPair final {
 
 }
 
-template <typename Value, typename LessComparator = std::less<Value>>
+template <typename Value, typename LessComparator = std::less<Value>,
+          typename Allocator = DefaultAllocator>
 using SkipListSet = SkipList<Value, Value, LessComparator,
-                             internal::SkipListReturnSelfFromValue<Value>>;
+                             internal::SkipListReturnSelfFromValue<Value>,
+                             Allocator>;
 
-template <typename Key, typename Value, typename LessComparator = std::less<Key>>
+template <typename Key, typename Value, typename LessComparator = std::less<Key>,
+          typename Allocator = DefaultAllocator>
 using SkipListMap = SkipList<Key, std::pair<Key, Value>, LessComparator,
-                             internal::SkipListReturnFirstOfPair<Key, Value>>;
+                             internal::SkipListReturnFirstOfPair<Key, Value>,
+                             Allocator>;
 
 }
 

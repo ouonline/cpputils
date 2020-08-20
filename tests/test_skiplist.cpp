@@ -2,6 +2,8 @@
 #include "cpputils/assert.h"
 #include <iostream>
 #include <set>
+#include <sys/time.h>
+#include <random>
 using namespace std;
 using namespace outils;
 
@@ -13,8 +15,6 @@ static void TestConst(const SkipListSet<int>& sl) {
 
 static void TestSkipListSet(void) {
     cout << "----- test " << __func__ << " begin -----" << endl;
-
-    srand(time(nullptr));
 
     SkipListSet<int> sl;
     for (int i = 100; i > 0; i -= 10) {
@@ -87,8 +87,53 @@ static void TestSkipListMap(void) {
     cout << "----- test " << __func__ << " end -----" << endl;
 }
 
+static void PrepareTestData(vector<uint32_t>* data) {
+    std::mt19937 gen(time(nullptr));
+    for (uint32_t i = 0; i < 555555; ++i) {
+        data->push_back(gen());
+    }
+}
+
+static inline uint64_t DiffTimeUsec(const struct timeval& end,
+                                    const struct timeval& begin) {
+    auto tmp = end;
+    if (tmp.tv_usec < begin.tv_usec) {
+        --tmp.tv_sec;
+        tmp.tv_usec += 1000000;
+    }
+    return (tmp.tv_sec - begin.tv_sec) * 1000000 +
+        (tmp.tv_usec - begin.tv_usec);
+}
+
+static void TestPerf() {
+    cout << "----- performance test begin -----" << endl;
+    vector<uint32_t> test_data;
+    PrepareTestData(&test_data);
+
+    set<uint32_t> st;
+    struct timeval st_begin, st_end;
+    gettimeofday(&st_begin, nullptr);
+    for (auto it : test_data) {
+        st.insert(it);
+    }
+    gettimeofday(&st_end, nullptr);
+
+    SkipListSet<uint32_t> sl;
+    struct timeval sl_begin, sl_end;
+    gettimeofday(&sl_begin, nullptr);
+    for (auto it : test_data) {
+        sl.Insert(it);
+    }
+    gettimeofday(&sl_end, nullptr);
+
+    cout << "skiplist insert cost " << DiffTimeUsec(sl_end, sl_begin) / 1000.0 << " ms, "
+         << "std::set insert cost " << DiffTimeUsec(st_end, st_begin) / 1000.0 << " ms."
+         << endl;
+}
+
 int main(void) {
     TestSkipListSet();
     TestSkipListMap();
+    TestPerf();
     return 0;
 }
