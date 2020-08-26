@@ -29,18 +29,17 @@ private:
 public:
     class Iterator final {
     public:
-        Iterator() : m_node(nullptr) {}
         Value* operator-> () {
-            return GetValueFromNode(m_node);
+            return m_value;
         }
         const Value* operator-> () const {
-            return GetValueFromNode(m_node);
+            return m_value;
         }
         Value& operator* () {
-            return *GetValueFromNode(m_node);
+            return *m_value;
         }
         const Value& operator* () const {
-            return *GetValueFromNode(m_node);
+            return *m_value;
         }
         bool operator== (const Iterator& it) const {
             return (m_node == it.m_node);
@@ -50,14 +49,24 @@ public:
         }
         void operator++ () {
             m_node = m_node->forward[0];
+            if (m_node) {
+                m_value = GetValueFromNode(m_node);
+            }
         }
 
     private:
         friend class SkipList;
-        Iterator(DataNode* node) : m_node(node) {}
+        Iterator(DataNode* node = nullptr) : m_node(node) {
+            if (node) {
+                m_value = GetValueFromNode(node);
+            } else {
+                m_value = nullptr;
+            }
+        }
 
     private:
         DataNode* m_node;
+        Value* m_value;
     };
 
 public:

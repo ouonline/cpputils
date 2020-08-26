@@ -8,12 +8,8 @@ namespace outils {
 
 class DefaultAllocator final {
 public:
-    void* Alloc(uint64_t size) {
-        return malloc(size);
-    }
-    void Free(void* ptr) {
-        free(ptr);
-    }
+    void* Alloc(uint64_t size) { return ::malloc(size); }
+    void Free(void* ptr) { ::free(ptr); }
 };
 
 }

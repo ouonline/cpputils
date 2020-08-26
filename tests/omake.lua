@@ -1,4 +1,4 @@
-project = CreateProject()
+project = Project()
 
 project:CreateBinary("test_text_utils"):AddDependencies(
     project:CreateDependency()

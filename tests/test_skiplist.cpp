@@ -26,9 +26,15 @@ static void TestSkipListSet(void) {
         ASSERT_TRUE(!ret_pair.second);
     }
 
+    auto it = sl.GetBeginIterator();
+    for (int i = 10; i <= 100; i += 10) {
+        ASSERT_EQ(*it, i);
+        ++it;
+    }
+
     TestConst(sl);
 
-    auto it = sl.Lookup(50);
+    it = sl.Lookup(50);
     ASSERT_TRUE(it != sl.GetEndIterator());
     ASSERT_EQ(*it, 50);
 
@@ -42,6 +48,12 @@ static void TestSkipListSet(void) {
 
     it = sl.LookupPrev(21);
     ASSERT_EQ(*it, 10);
+
+    it = sl.LookupPrev(1000);
+    ASSERT_EQ(*it, 100);
+
+    it = sl.LookupPrev(1);
+    ASSERT_TRUE(it == sl.GetEndIterator());
 
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);

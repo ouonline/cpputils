@@ -1,4 +1,4 @@
-project = CreateProject()
+project = Project()
 
 dep = project:CreateDependency()
     :AddSourceFiles("*.cpp")
