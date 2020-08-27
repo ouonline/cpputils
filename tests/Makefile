@@ -28,7 +28,7 @@ test_skiplist_OBJS := omake_dep_1.test_skiplist.cpp.o
 test_skiplist_LIBS := ../libcpputils_static.a ../../math/libmath_static.a
 
 test_skiplist: $(test_skiplist_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_skiplist_LIBS)
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -o $@ $^ $(test_skiplist_LIBS)
 
 omake_dep_0_INCLUDE := -I../..
 
@@ -40,7 +40,7 @@ test_text_utils_OBJS := omake_dep_0.test_text_utils.cpp.o
 test_text_utils_LIBS := ../libcpputils_static.a ../../math/libmath_static.a
 
 test_text_utils: $(test_text_utils_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -Wextra -Werror -Wall -o $@ $^ $(test_text_utils_LIBS)
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -o $@ $^ $(test_text_utils_LIBS)
 
 clean:
 	rm -f $(TARGET) $(test_skiplist_OBJS) $(test_text_utils_OBJS)

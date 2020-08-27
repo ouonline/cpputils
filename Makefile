@@ -30,7 +30,7 @@ cpputils_shared_OBJS := omake_dep_0.text_utils.cpp.o
 cpputils_shared_LIBS := ../math/libmath_static.a
 
 libcpputils_shared.so: $(cpputils_shared_OBJS) | omake_phony_0
-	$(CXX) $(CXXFLAGS) -fPIC -Wextra -Werror -Wall -shared -o $@ $^ $(cpputils_shared_LIBS)
+	$(CXX) $(CXXFLAGS) -Wall -Werror -Wextra -fPIC -shared -o $@ $^ $(cpputils_shared_LIBS)
 
 cpputils_static_OBJS := omake_dep_0.text_utils.cpp.o
 
