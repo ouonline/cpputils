@@ -1,5 +1,6 @@
 #include "cpputils/skiplist.h"
 #include "cpputils/assert.h"
+#include "cpputils/time_utils.h"
 #include <iostream>
 #include <set>
 #include <sys/time.h>
@@ -104,17 +105,6 @@ static void PrepareTestData(vector<uint32_t>* data) {
     for (uint32_t i = 0; i < 555555; ++i) {
         data->push_back(gen());
     }
-}
-
-static inline uint64_t DiffTimeUsec(const struct timeval& end,
-                                    const struct timeval& begin) {
-    auto tmp = end;
-    if (tmp.tv_usec < begin.tv_usec) {
-        --tmp.tv_sec;
-        tmp.tv_usec += 1000000;
-    }
-    return (tmp.tv_sec - begin.tv_sec) * 1000000 +
-        (tmp.tv_usec - begin.tv_usec);
 }
 
 static void TestPerf() {

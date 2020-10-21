@@ -17,12 +17,12 @@ private:
 
 private:
     struct DataNode final {
-        uintptr_t level;
+        uint32_t level;
         DataNode* forward[0];
     };
 
     struct HeadNode final {
-        uintptr_t level;
+        uint32_t level;
         DataNode* forward[SKIPLIST_MAX_LEVEL];
     };
 
@@ -201,7 +201,7 @@ private:
         }
 
         pvalue->~Value();
-        m_allocator.Free(node);
+        m_allocator.Free(pvalue);
 
         while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
             --m_head.level;
@@ -213,16 +213,17 @@ private:
     DataNode* InnerInsert(const Value& value, DataNode* update[]) {
         const uint32_t level = GenRandomLevel();
 
-        auto node = (DataNode*)m_allocator.Alloc(sizeof(DataNode) +
-                                                 (sizeof(DataNode*) * level) +
-                                                 Align(sizeof(Value), sizeof(uintptr_t)));
-        if (!node) {
+        auto base = (char*)m_allocator.Alloc(sizeof(Value) +
+                                             sizeof(DataNode) +
+                                             (sizeof(DataNode*) * level));
+        if (!base) {
             return nullptr;
         }
+        new (base) Value(value);
 
+        auto node = (DataNode*)(base + sizeof(Value));
         node->level = level;
         memset(node->forward, 0, sizeof(DataNode*) * level);
-        new (GetValueFromNode(node)) Value(value);
 
         if (level > m_head.level) {
             for (uint32_t i = m_head.level; i < level; ++i) {
@@ -245,7 +246,7 @@ private:
             auto next = cur->forward[0];
             auto pvalue = GetValueFromNode(cur);
             pvalue->~Value();
-            m_allocator.Free(cur);
+            m_allocator.Free(pvalue);
             cur = next;
         }
     }
@@ -258,12 +259,8 @@ private:
         return level;
     }
 
-    uint64_t Align(uint64_t n, uint32_t alignment) const {
-        return ((n + alignment - 1) & (~(alignment - 1)));
-    }
-
     static Value* GetValueFromNode(const DataNode* node) {
-        return (Value*)((char*)node + sizeof(DataNode) + sizeof(DataNode*) * node->level);
+        return (Value*)((char*)node - sizeof(Value));
     }
 
 private:
