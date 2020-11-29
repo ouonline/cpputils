@@ -6,7 +6,7 @@
 
 namespace outils {
 
-class DefaultAllocator final {
+class DefaultAllocator {
 public:
     void* Alloc(uint64_t size) { return ::malloc(size); }
     void Free(void* ptr) { ::free(ptr); }

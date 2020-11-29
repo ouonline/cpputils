@@ -11,7 +11,7 @@ namespace outils {
 
 template <typename Key, typename Value, typename LessComparator,
           typename GetKeyFromValue, typename Allocator>
-class SkipList final {
+class SkipList final : public Allocator {
 private:
     static constexpr uint32_t SKIPLIST_MAX_LEVEL = 8;
 
@@ -70,7 +70,7 @@ public:
     };
 
 public:
-    SkipList(Allocator ar = DefaultAllocator()) : m_allocator(ar) {
+    SkipList() {
         xoshiro256ss_init(&m_rand, (uintptr_t)this);
         memset(&m_head, 0, sizeof(HeadNode));
     }
@@ -144,8 +144,8 @@ public:
         return Iterator(m_head.forward[0]);
     }
 
-    const Iterator& GetEndIterator() const {
-        return m_end_iterator;
+    Iterator GetEndIterator() const {
+        return Iterator();
     }
 
 private:
@@ -201,7 +201,7 @@ private:
         }
 
         pvalue->~Value();
-        m_allocator.Free(pvalue);
+        this->Free(pvalue);
 
         while (m_head.level > 0 && !m_head.forward[m_head.level - 1]) {
             --m_head.level;
@@ -213,9 +213,9 @@ private:
     DataNode* InnerInsert(const Value& value, DataNode* update[]) {
         const uint32_t level = GenRandomLevel();
 
-        auto base = (char*)m_allocator.Alloc(sizeof(Value) +
-                                             sizeof(DataNode) +
-                                             (sizeof(DataNode*) * level));
+        auto base = (char*)this->Alloc(sizeof(Value) +
+                                       sizeof(DataNode) +
+                                       (sizeof(DataNode*) * level));
         if (!base) {
             return nullptr;
         }
@@ -246,7 +246,7 @@ private:
             auto next = cur->forward[0];
             auto pvalue = GetValueFromNode(cur);
             pvalue->~Value();
-            m_allocator.Free(pvalue);
+            this->Free(pvalue);
             cur = next;
         }
     }
@@ -267,8 +267,6 @@ private:
     HeadNode m_head;
     LessComparator m_less;
     GetKeyFromValue m_get_key;
-    Allocator m_allocator;
-    Iterator m_end_iterator;
     mutable Xoshiro256ss m_rand;
 
 public:
