@@ -253,7 +253,7 @@ private:
 
     uint32_t GenRandomLevel() const {
         uint32_t level = 1;
-        while (level < SKIPLIST_MAX_LEVEL && xoshiro256ss_rand(&m_rand) % 4 == 0) {
+        while (level < SKIPLIST_MAX_LEVEL && xoshiro256ss_next(&m_rand) % 4 == 0) {
             ++level;
         }
         return level;
