@@ -47,13 +47,13 @@ static void TestSkipListSet(void) {
     it = sl.LookupGreaterOrEqual(21);
     ASSERT_EQ(*it, 30);
 
-    it = sl.LookupPrev(21);
+    it = sl.LookupLess(21);
     ASSERT_EQ(*it, 10);
 
-    it = sl.LookupPrev(1000);
+    it = sl.LookupLess(1000);
     ASSERT_EQ(*it, 100);
 
-    it = sl.LookupPrev(1);
+    it = sl.LookupLess(1);
     ASSERT_TRUE(it == sl.GetEndIterator());
 
     int ret = 0;
