@@ -128,8 +128,8 @@ public:
         return Iterator(node);
     }
 
-    Iterator LookupLess(const Key& key) const {
-        auto prev = InnerLookupLess(key);
+    Iterator LookupLessThan(const Key& key) const {
+        auto prev = InnerLookupLessThan(key);
         if (prev == (DataNode*)(&m_head)) {
             return Iterator();
         }
@@ -149,7 +149,7 @@ public:
     }
 
 private:
-    DataNode* InnerLookupLess(const Key& key, DataNode** update = nullptr) const {
+    DataNode* InnerLookupLessThan(const Key& key, DataNode** update = nullptr) const {
         auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
             const uint32_t level = l - 1;
@@ -172,7 +172,7 @@ private:
     }
 
     DataNode* InnerLookupGreaterOrEqual(const Key& key, DataNode** update = nullptr) const {
-        auto prev = InnerLookupLess(key, update);
+        auto prev = InnerLookupLessThan(key, update);
         return prev->forward[0];
     }
 
