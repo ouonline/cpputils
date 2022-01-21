@@ -1,6 +1,5 @@
 #include "cpputils/skiplist.h"
 #include "cpputils/assert.h"
-#include "cpputils/time_utils.h"
 #include <iostream>
 #include <set>
 #include <sys/time.h>
@@ -107,6 +106,14 @@ static void PrepareTestData(vector<uint32_t>* data) {
     }
 }
 
+uint64_t diff_time_usec(struct timeval end, const struct timeval* begin) {
+    if (end.tv_usec < begin->tv_usec) {
+        --end.tv_sec;
+        end.tv_usec += 1000000;
+    }
+    return (end.tv_sec - begin->tv_sec) * 1000000 + (end.tv_usec - begin->tv_usec);
+}
+
 static void TestPerf() {
     cout << "----- performance test begin -----" << endl;
     vector<uint32_t> test_data;
@@ -128,8 +135,8 @@ static void TestPerf() {
     }
     gettimeofday(&sl_end, nullptr);
 
-    cout << "skiplist insert cost " << DiffTimeUsec(sl_end, sl_begin) / 1000.0 << " ms, "
-         << "std::set insert cost " << DiffTimeUsec(st_end, st_begin) / 1000.0 << " ms."
+    cout << "skiplist insert cost " << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
+         << "std::set insert cost " << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms."
          << endl;
 }
 
