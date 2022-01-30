@@ -3,13 +3,29 @@ using namespace std;
 
 namespace outils {
 
+static const char* MemMem(const char* haystack, unsigned int haystack_len,
+                          const char* needle, unsigned int needle_len)
+{
+    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
+        return nullptr;
+    }
+
+    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (memcmp(h, needle, needle_len) == 0) {
+            return h;
+        }
+    }
+
+    return nullptr;
+}
+
 void TextSplit(const char* str, unsigned int len,
                const char* delim, unsigned int delim_len,
                const function<bool (const char* s, unsigned int l)>& f) {
     const char* end = str + len;
 
     while (str < end) {
-        const char* cursor = (const char*)memmem(str, len, delim, delim_len);
+        auto cursor = MemMem(str, len, delim, delim_len);
         if (!cursor) {
             f(str, end - str);
             return;
@@ -34,7 +50,7 @@ string TextReplace(const char* text, unsigned int tlen,
     const char* end = text + tlen;
 
     while (text < end) {
-        const char* cursor = (const char*)memmem(text, tlen, search, slen);
+        auto cursor = MemMem(text, tlen, search, slen);
         if (!cursor) {
             return ret + string(text, tlen);
         }
