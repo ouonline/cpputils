@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 project(cpputils-test)
 
 add_executable(test_text_utils test_text_utils.cpp)
