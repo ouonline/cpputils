@@ -1,7 +1,7 @@
 #ifndef __CPPUTILS_SKIPLIST_H__
 #define __CPPUTILS_SKIPLIST_H__
 
-#include "default_allocator.h"
+#include "generic_cpu_allocator.h"
 #include "math/xoshiro256ss.h"
 #include <cstdint>
 #include <cstring>
@@ -299,13 +299,13 @@ struct SkipListReturnFirstOfPair final {
 }
 
 template <typename Value, typename LessComparator = std::less<Value>,
-          typename Allocator = DefaultAllocator>
+          typename Allocator = GenericCpuAllocator>
 using SkipListSet = SkipList<Value, Value, LessComparator,
                              internal::SkipListReturnSelfFromValue<Value>,
                              Allocator>;
 
 template <typename Key, typename Value, typename LessComparator = std::less<Key>,
-          typename Allocator = DefaultAllocator>
+          typename Allocator = GenericCpuAllocator>
 using SkipListMap = SkipList<Key, std::pair<Key, Value>, LessComparator,
                              internal::SkipListReturnFirstOfPair<Key, Value>,
                              Allocator>;
