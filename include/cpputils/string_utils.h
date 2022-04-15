@@ -1,5 +1,5 @@
-#ifndef __CPPUTILS_TEXT_UTILS_H__
-#define __CPPUTILS_TEXT_UTILS_H__
+#ifndef __CPPUTILS_STRING_UTILS_H__
+#define __CPPUTILS_STRING_UTILS_H__
 
 #include <cstring>
 #include <string>
@@ -7,19 +7,19 @@
 
 namespace outils {
 
-void TextSplit(const char* str, unsigned int len,
+void StringSplit(const char* str, unsigned int len,
                const char* delim, unsigned int delim_len,
                const std::function<bool (const char* s, unsigned int l)>& f);
 
-std::string TextReplace(const char* text, unsigned int tlen,
+std::string StringReplace(const char* text, unsigned int tlen,
                         const char* search, unsigned int slen,
                         const char* replace, unsigned int rlen);
 
-bool TextEndsWith(const char* text, unsigned int tlen,
+bool StringEndsWith(const char* text, unsigned int tlen,
                   const char* suffix, unsigned int slen);
 
-// reutrn the number of chars removed at the end of `text`
-unsigned int TextTrim(const char* text, unsigned int tlen, char c);
+// reutrns the number of chars removed at the end of `text`
+unsigned int StringTrim(const char* text, unsigned int tlen, char c);
 
 }
 
