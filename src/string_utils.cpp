@@ -1,4 +1,4 @@
-#include "cpputils/text_utils.h"
+#include "cpputils/string_utils.h"
 using namespace std;
 
 namespace outils {
@@ -19,9 +19,9 @@ static const char* MemMem(const char* haystack, unsigned int haystack_len,
     return nullptr;
 }
 
-void TextSplit(const char* str, unsigned int len,
-               const char* delim, unsigned int delim_len,
-               const function<bool (const char* s, unsigned int l)>& f) {
+void StringSplit(const char* str, unsigned int len,
+                 const char* delim, unsigned int delim_len,
+                 const function<bool (const char* s, unsigned int l)>& f) {
     const char* end = str + len;
 
     while (str < end) {
@@ -43,9 +43,9 @@ void TextSplit(const char* str, unsigned int len,
     f("", 0); // the last empty field
 }
 
-string TextReplace(const char* text, unsigned int tlen,
-                   const char* search, unsigned int slen,
-                   const char* replace, unsigned int rlen) {
+string StringReplace(const char* text, unsigned int tlen,
+                     const char* search, unsigned int slen,
+                     const char* replace, unsigned int rlen) {
     string ret;
     const char* end = text + tlen;
 
@@ -69,8 +69,8 @@ string TextReplace(const char* text, unsigned int tlen,
     return ret;
 }
 
-bool TextEndsWith(const char* text, unsigned int tlen,
-                  const char* suffix, unsigned int slen) {
+bool StringEndsWith(const char* text, unsigned int tlen,
+                    const char* suffix, unsigned int slen) {
     if (tlen < slen) {
         return false;
     }
@@ -78,7 +78,7 @@ bool TextEndsWith(const char* text, unsigned int tlen,
     return (memcmp(text + tlen - slen, suffix, slen) == 0);
 }
 
-unsigned int TextTrim(const char* text, unsigned int tlen, char c) {
+unsigned int StringTrim(const char* text, unsigned int tlen, char c) {
     unsigned int pos = tlen;
     while (pos > 0) {
         --pos;
