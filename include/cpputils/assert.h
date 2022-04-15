@@ -3,14 +3,19 @@
 
 #include <iostream>
 
-#define ASSERT_EQF(___actual___, ___expected___, ___eq_func___) \
+static inline std::ostream& operator<<(std::ostream& ofs, std::nullptr_t) {
+    ofs << "nullptr";
+    return ofs;
+}
+
+#define ASSERT_EQF(___expected___, ___actual___, ___eq_func___) \
     do {                                                        \
         auto __va__ = (___actual___);                           \
         auto __vb__ = (___expected___);                         \
         if (!___eq_func___(__va__,  __vb__)) {                  \
-            std::cerr << "[FATAL] "                             \
+            std::cerr << "[FATAL]["                             \
                       << __FILE__ << ":" << __LINE__            \
-                      << ":\t"                                  \
+                      << "]\t"                                  \
                       << "actual [" << __va__                   \
                       << "] != expected [" << __vb__            \
                       << "]" << std::endl;                      \
@@ -18,16 +23,31 @@
         }                                                       \
     } while (0)
 
-#define ASSERT_EQ(___actual___, ___expected___)         \
+#define ASSERT_EQ(___expected___, ___actual___)         \
     do {                                                \
         auto __va__ = (___actual___);                   \
         auto __vb__ = (___expected___);                 \
         if (__va__ != __vb__) {                         \
-            std::cerr << "[FATAL] "                     \
+            std::cerr << "[FATAL]["                     \
                       << __FILE__ << ":" << __LINE__    \
-                      << ":\t"                          \
+                      << "]\t"                          \
                       << "actual [" << __va__           \
                       << "] != expected [" << __vb__    \
+                      << "]" << std::endl;              \
+            exit(-1);                                   \
+        }                                               \
+    } while (0)
+
+#define ASSERT_NE(___expected___, ___actual___)         \
+    do {                                                \
+        auto __va__ = (___actual___);                   \
+        auto __vb__ = (___expected___);                 \
+        if (__va__ == __vb__) {                         \
+            std::cerr << "[FATAL]["                     \
+                      << __FILE__ << ":" << __LINE__    \
+                      << "]\t"                          \
+                      << "actual [" << __va__           \
+                      << "] == expected [" << __vb__    \
                       << "]" << std::endl;              \
             exit(-1);                                   \
         }                                               \
@@ -37,9 +57,9 @@
     do {                                                \
         bool __ok__ = (___cond___);                     \
         if (!__ok__) {                                  \
-            std::cerr << "[FATAL] "                     \
+            std::cerr << "[FATAL]["                     \
                       << __FILE__ << ":" << __LINE__    \
-                      << ":\tcond [" << #___cond___     \
+                      << "]\tcond [" << #___cond___     \
                       << "] is false."                  \
                       << std::endl;                     \
             exit(-1);                                   \

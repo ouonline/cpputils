@@ -10,7 +10,7 @@ using namespace outils;
 static void TestConst(const SkipListSet<int>& sl) {
     auto it = sl.Lookup(50);
     ASSERT_TRUE(it != sl.GetEndIterator());
-    ASSERT_EQ(*it, 50);
+    ASSERT_EQ(50, *it);
 }
 
 static void TestSkipListSet(void) {
@@ -28,7 +28,7 @@ static void TestSkipListSet(void) {
 
     auto it = sl.GetBeginIterator();
     for (int i = 10; i <= 100; i += 10) {
-        ASSERT_EQ(*it, i);
+        ASSERT_EQ(i, *it);
         ++it;
     }
 
@@ -36,7 +36,7 @@ static void TestSkipListSet(void) {
 
     it = sl.Lookup(50);
     ASSERT_TRUE(it != sl.GetEndIterator());
-    ASSERT_EQ(*it, 50);
+    ASSERT_EQ(50, *it);
 
     it = sl.Lookup(101);
     ASSERT_TRUE(it == sl.GetEndIterator());
@@ -44,20 +44,20 @@ static void TestSkipListSet(void) {
     sl.Remove(20);
 
     it = sl.LookupGreaterOrEqual(21);
-    ASSERT_EQ(*it, 30);
+    ASSERT_EQ(30, *it);
 
     it = sl.LookupLessThan(21);
-    ASSERT_EQ(*it, 10);
+    ASSERT_EQ(10, *it);
 
     it = sl.LookupLessThan(1000);
-    ASSERT_EQ(*it, 100);
+    ASSERT_EQ(100, *it);
 
     it = sl.LookupLessThan(1);
     ASSERT_TRUE(it == sl.GetEndIterator());
 
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);
-    ASSERT_EQ(ret, 30);
+    ASSERT_EQ(30, ret);
 
     for (auto it = sl.GetBeginIterator(); it != sl.GetEndIterator(); ++it) {
         cout << "    " << *it << endl;
