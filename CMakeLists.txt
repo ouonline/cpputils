@@ -14,11 +14,18 @@ target_include_directories(cpputils_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 # ----- dependencies ----- #
 
-if(NOT math_static)
-    set(MATH_BUILD_TESTS OFF CACHE BOOL "")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../math ${CMAKE_CURRENT_BINARY_DIR}/math)
-    target_link_libraries(cpputils_static PUBLIC math_static)
+if(NOT CPPUTILS_DEPS_DIR)
+    set(CPPUTILS_DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+    message(WARNING "`CPPUTILS_DEPS_DIR` is not set. set `CPPUTILS_DEPS_DIR` to ${CPPUTILS_DEPS_DIR}")
 endif()
+
+if(NOT TARGET math_static)
+    set(MATH_BUILD_TESTS OFF CACHE BOOL "")
+    set(MATH_DEPS_DIR ${CPPUTILS_DEPS_DIR})
+    add_subdirectory(${CPPUTILS_DEPS_DIR}/math ${CMAKE_CURRENT_BINARY_DIR}/math-build)
+endif()
+
+target_link_libraries(cpputils_static PUBLIC math_static)
 
 # ----- installations ----- #
 
