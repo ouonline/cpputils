@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include "cpputils/allocator.h"
 
-namespace outils {
+namespace cpputils {
 
 class GenericCpuAllocator : public Allocator {
 public:

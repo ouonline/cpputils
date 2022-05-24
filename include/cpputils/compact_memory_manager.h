@@ -6,7 +6,7 @@
 #include <map>
 #include <set>
 
-namespace outils {
+namespace cpputils {
 
 class CompactMemoryManager final {
 public:

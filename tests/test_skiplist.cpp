@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <random>
 using namespace std;
-using namespace outils;
+using namespace cpputils;
 
 static void TestConst(const SkipListSet<int>& sl) {
     auto it = sl.Lookup(50);

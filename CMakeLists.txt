@@ -16,7 +16,7 @@ target_include_directories(cpputils_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 if(NOT CPPUTILS_DEPS_DIR)
     set(CPPUTILS_DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-    message(WARNING "`CPPUTILS_DEPS_DIR` is not set. set `CPPUTILS_DEPS_DIR` to ${CPPUTILS_DEPS_DIR}")
+    message(WARNING "`CPPUTILS_DEPS_DIR` is not set. set `CPPUTILS_DEPS_DIR` to `${CPPUTILS_DEPS_DIR}`.")
 endif()
 
 if(NOT TARGET math_static)

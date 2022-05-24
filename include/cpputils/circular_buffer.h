@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <vector>
 
-namespace outils {
+namespace cpputils {
 
 template <typename T>
 class CircularBuffer final {

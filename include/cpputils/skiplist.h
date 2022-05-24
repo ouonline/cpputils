@@ -7,7 +7,7 @@
 #include <cstring>
 #include <functional>
 
-namespace outils {
+namespace cpputils {
 
 template <typename Key, typename Value, typename LessComparator,
           typename GetKeyFromValue, typename Allocator>

@@ -5,7 +5,7 @@
 #include <string>
 #include <functional>
 
-namespace outils {
+namespace cpputils {
 
 void StringSplit(const char* str, unsigned int len,
                const char* delim, unsigned int delim_len,
