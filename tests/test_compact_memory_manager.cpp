@@ -1,7 +1,7 @@
 #include "cpputils/compact_memory_manager.h"
 #include "cpputils/generic_cpu_allocator.h"
 #include "cpputils/assert.h"
-using namespace outils;
+using namespace cpputils;
 
 static void TestAllocAndFree1() {
     const uint32_t block_bytes = 1024;

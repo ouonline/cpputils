@@ -1,5 +1,5 @@
 #include "cpputils/string_utils.h"
-using namespace outils;
+using namespace cpputils;
 
 #include <iostream>
 using namespace std;

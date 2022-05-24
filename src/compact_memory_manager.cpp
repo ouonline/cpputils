@@ -1,7 +1,7 @@
 #include "cpputils/compact_memory_manager.h"
 using namespace std;
 
-namespace outils {
+namespace cpputils {
 
 CompactMemoryManager::CompactMemoryManager(Allocator* ar, uint64_t block_bytes)
     : m_block_bytes(block_bytes), m_allocator(ar), m_allocated_bytes(0) {

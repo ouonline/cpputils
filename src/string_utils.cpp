@@ -1,7 +1,7 @@
 #include "cpputils/string_utils.h"
 using namespace std;
 
-namespace outils {
+namespace cpputils {
 
 static const char* MemMem(const char* haystack, unsigned int haystack_len,
                           const char* needle, unsigned int needle_len)

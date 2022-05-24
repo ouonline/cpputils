@@ -3,15 +3,10 @@
 
 #include <iostream>
 
-static inline std::ostream& operator<<(std::ostream& ofs, std::nullptr_t) {
-    ofs << "nullptr";
-    return ofs;
-}
-
 #define ASSERT_EQF(___expected___, ___actual___, ___eq_func___) \
     do {                                                        \
-        auto __va__ = (___actual___);                           \
-        auto __vb__ = (___expected___);                         \
+        auto __va__ = ___actual___;                             \
+        auto __vb__ = ___expected___;                           \
         if (!___eq_func___(__va__,  __vb__)) {                  \
             std::cerr << "[FATAL]["                             \
                       << __FILE__ << ":" << __LINE__            \
@@ -25,8 +20,8 @@ static inline std::ostream& operator<<(std::ostream& ofs, std::nullptr_t) {
 
 #define ASSERT_EQ(___expected___, ___actual___)         \
     do {                                                \
-        auto __va__ = (___actual___);                   \
-        auto __vb__ = (___expected___);                 \
+        auto __va__ = ___actual___;                     \
+        auto __vb__ = ___expected___;                   \
         if (__va__ != __vb__) {                         \
             std::cerr << "[FATAL]["                     \
                       << __FILE__ << ":" << __LINE__    \
@@ -40,8 +35,8 @@ static inline std::ostream& operator<<(std::ostream& ofs, std::nullptr_t) {
 
 #define ASSERT_NE(___expected___, ___actual___)         \
     do {                                                \
-        auto __va__ = (___actual___);                   \
-        auto __vb__ = (___expected___);                 \
+        auto __va__ = ___actual___;                     \
+        auto __vb__ = ___expected___;                   \
         if (__va__ == __vb__) {                         \
             std::cerr << "[FATAL]["                     \
                       << __FILE__ << ":" << __LINE__    \

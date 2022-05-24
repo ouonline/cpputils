@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-namespace outils {
+namespace cpputils {
 
 class Allocator {
 public:
