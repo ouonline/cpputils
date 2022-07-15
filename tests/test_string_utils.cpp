@@ -4,6 +4,9 @@ using namespace cpputils;
 #include <iostream>
 using namespace std;
 
+#undef NDEBUG
+#include <assert.h>
+
 static void TestStringSplit() {
     const char* text = "abc,,de,f,g,,";
     unsigned int counter = 1;
@@ -14,6 +17,42 @@ static void TestStringSplit() {
     };
 
     StringSplit(text, strlen(text), ",", 1, f);
+}
+
+static void TestStringSplitter() {
+    const char* text = "abc,,de,f,g,,";
+    StringSplitter splitter(text, strlen(text));
+
+    auto ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string("abc"));
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string());
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string("de"));
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string("f"));
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string("g"));
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string());
+
+    ret_pair = splitter.Next(",", 1);
+    assert(ret_pair.first);
+    assert(string(ret_pair.first, ret_pair.second) == string());
+
+    ret_pair = splitter.Next(",", 1);
+    assert(!ret_pair.first);
 }
 
 static void TestStringReplace() {
@@ -36,8 +75,8 @@ static void TestStringReplace() {
 
 int main(void) {
     TestStringSplit();
-    cout << "-----------------------------" << endl;
     TestStringReplace();
+    TestStringSplitter();
 
     return 0;
 }

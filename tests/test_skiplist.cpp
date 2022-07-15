@@ -1,5 +1,4 @@
 #include "cpputils/skiplist.h"
-#include "cpputils/assert.h"
 #include <iostream>
 #include <set>
 #include <sys/time.h>
@@ -7,10 +6,13 @@
 using namespace std;
 using namespace cpputils;
 
+#undef NDEBUG
+#include <assert.h>
+
 static void TestConst(const SkipListSet<int>& sl) {
     auto it = sl.Lookup(50);
-    ASSERT_TRUE(it != sl.GetEndIterator());
-    ASSERT_EQ(50, *it);
+    assert(it != sl.GetEndIterator());
+    assert(*it == 50);
 }
 
 static void TestSkipListSet(void) {
@@ -19,45 +21,45 @@ static void TestSkipListSet(void) {
     SkipListSet<int> sl;
     for (int i = 100; i > 0; i -= 10) {
         auto ret_pair = sl.Insert(i);
-        ASSERT_TRUE(ret_pair.second);
+        assert(ret_pair.second);
     }
     for (int i = 100; i > 0; i -= 10) {
         auto ret_pair = sl.Insert(i);
-        ASSERT_TRUE(!ret_pair.second);
+        assert(!ret_pair.second);
     }
 
     auto it = sl.GetBeginIterator();
     for (int i = 10; i <= 100; i += 10) {
-        ASSERT_EQ(i, *it);
+        assert(*it == i);
         ++it;
     }
 
     TestConst(sl);
 
     it = sl.Lookup(50);
-    ASSERT_TRUE(it != sl.GetEndIterator());
-    ASSERT_EQ(50, *it);
+    assert(it != sl.GetEndIterator());
+    assert(*it == 50);
 
     it = sl.Lookup(101);
-    ASSERT_TRUE(it == sl.GetEndIterator());
+    assert(it == sl.GetEndIterator());
 
     sl.Remove(20);
 
     it = sl.LookupGreaterOrEqual(21);
-    ASSERT_EQ(30, *it);
+    assert(*it == 30);
 
     it = sl.LookupLessThan(21);
-    ASSERT_EQ(10, *it);
+    assert(*it == 10);
 
     it = sl.LookupLessThan(1000);
-    ASSERT_EQ(100, *it);
+    assert(*it == 100);
 
     it = sl.LookupLessThan(1);
-    ASSERT_TRUE(it == sl.GetEndIterator());
+    assert(it == sl.GetEndIterator());
 
     int ret = 0;
     sl.RemoveGreaterOrEqual(21, &ret);
-    ASSERT_EQ(30, ret);
+    assert(ret == 30);
 
     for (auto it = sl.GetBeginIterator(); it != sl.GetEndIterator(); ++it) {
         cout << "    " << *it << endl;
@@ -83,17 +85,17 @@ static void TestSkipListMap(void) {
     SkipListMap<int, TestValue> sl;
     for (int i = 0; i < 100; i += 10) {
         auto ret_pair = sl.Insert(std::pair<int, TestValue>(i, TestValue(i)));
-        ASSERT_TRUE(ret_pair.second);
+        assert(ret_pair.second);
     }
 
     sl.Remove(20);
 
     sl.Clear();
-    ASSERT_TRUE(sl.IsEmpty());
+    assert(sl.IsEmpty());
 
     for (int i = 0; i < 100; i += 10) {
         auto ret_pair = sl.Insert(std::pair<int, TestValue>(i, TestValue(i)));
-        ASSERT_TRUE(ret_pair.second);
+        assert(ret_pair.second);
     }
 
     cout << "----- test " << __func__ << " end -----" << endl;
