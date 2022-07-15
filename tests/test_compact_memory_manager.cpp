@@ -1,7 +1,9 @@
 #include "cpputils/compact_memory_manager.h"
 #include "cpputils/generic_cpu_allocator.h"
-#include "cpputils/assert.h"
 using namespace cpputils;
+
+#undef NDEBUG
+#include <assert.h>
 
 static void TestAllocAndFree1() {
     const uint32_t block_bytes = 1024;
@@ -10,15 +12,15 @@ static void TestAllocAndFree1() {
 
     uint32_t alloc_size = 100;
     auto ret = mgr.Alloc(alloc_size);
-    ASSERT_NE(nullptr, ret);
+    assert(ret != nullptr);
     mgr.Free(ret, alloc_size);
-    ASSERT_EQ(block_bytes, mgr.GetAllocatedBytes());
+    assert(mgr.GetAllocatedBytes() == block_bytes);
 
     alloc_size = block_bytes + 1;
     ret = mgr.Alloc(alloc_size);
-    ASSERT_NE(nullptr, ret);
+    assert(ret != nullptr);
     mgr.Free(ret, alloc_size);
-    ASSERT_EQ(block_bytes * 3, mgr.GetAllocatedBytes());
+    assert(mgr.GetAllocatedBytes() == block_bytes * 3);
 }
 
 static void TestAllocAndFree2() {
@@ -28,20 +30,20 @@ static void TestAllocAndFree2() {
 
     uint32_t alloc_size = block_bytes - 1;
     auto ret = mgr.Alloc(alloc_size);
-    ASSERT_NE(nullptr, ret);
-    ASSERT_EQ(block_bytes, mgr.GetAllocatedBytes());
+    assert(ret != nullptr);
+    assert(mgr.GetAllocatedBytes() == block_bytes);
     mgr.Free(ret, alloc_size);
 
     // reuse last freed memories
     alloc_size = block_bytes - 2;
     ret = mgr.Alloc(alloc_size);
-    ASSERT_NE(nullptr, ret);
-    ASSERT_EQ(block_bytes, mgr.GetAllocatedBytes());
+    assert(ret != nullptr);
+    assert(mgr.GetAllocatedBytes() == block_bytes);
     // without mgr.Free()
 
     ret = mgr.Alloc(alloc_size);
-    ASSERT_NE(nullptr, ret);
-    ASSERT_EQ(block_bytes * 2, mgr.GetAllocatedBytes());
+    assert(ret != nullptr);
+    assert(mgr.GetAllocatedBytes() == block_bytes * 2);
 }
 
 int main(void) {
