@@ -2,7 +2,7 @@
 #define __CPPUTILS_SKIPLIST_H__
 
 #include "generic_cpu_allocator.h"
-#include "math/xoshiro256ss.h"
+#include "cutils/random/xoshiro256ss.h"
 #include <cstdint>
 #include <cstring>
 #include <functional>
