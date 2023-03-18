@@ -19,30 +19,6 @@ static const char* MemMem(const char* haystack, unsigned int haystack_len,
     return nullptr;
 }
 
-void StringSplit(const char* str, unsigned int len,
-                 const char* delim, unsigned int delim_len,
-                 const function<bool (const char* s, unsigned int l)>& f) {
-    const char* end = str + len;
-
-    while (str < end) {
-        auto cursor = MemMem(str, len, delim, delim_len);
-        if (!cursor) {
-            f(str, end - str);
-            return;
-        }
-
-        if (!f(str, cursor - str)) {
-            return;
-        }
-
-        cursor += delim_len;
-        str = cursor;
-        len = end - cursor;
-    }
-
-    f("", 0); // the last empty field
-}
-
 string StringReplace(const char* text, unsigned int tlen,
                      const char* search, unsigned int slen,
                      const char* replace, unsigned int rlen) {

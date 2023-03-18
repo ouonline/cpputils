@@ -7,18 +7,6 @@ using namespace std;
 #undef NDEBUG
 #include <assert.h>
 
-static void TestStringSplit() {
-    const char* text = "abc,,de,f,g,,";
-    unsigned int counter = 1;
-    auto f = [&counter] (const char* s, unsigned int l) -> bool {
-        cout << counter << " -> |" << string(s, l) << "|" << endl;
-        ++counter;
-        return true;
-    };
-
-    StringSplit(text, strlen(text), ",", 1, f);
-}
-
 static void TestStringSplitter() {
     const char* text = "abc,,de,f,g,,";
     StringSplitter splitter(text, strlen(text));
@@ -74,7 +62,6 @@ static void TestStringReplace() {
 }
 
 int main(void) {
-    TestStringSplit();
     TestStringReplace();
     TestStringSplitter();
 
