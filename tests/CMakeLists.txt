@@ -9,5 +9,5 @@ target_link_libraries(test_string_utils PRIVATE cpputils_static)
 add_executable(test_skiplist test_skiplist.cpp)
 target_link_libraries(test_skiplist PRIVATE cpputils_static)
 
-add_executable(test_compact_memory_manager test_compact_memory_manager.cpp)
-target_link_libraries(test_compact_memory_manager PRIVATE cpputils_static)
+add_executable(test_compact_addr_manager test_compact_addr_manager.cpp)
+target_link_libraries(test_compact_addr_manager PRIVATE cpputils_static)
