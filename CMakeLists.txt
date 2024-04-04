@@ -28,7 +28,7 @@ set(FETCHCONTENT_QUIET OFF)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 if(NOT CPPUTILS_DEPS_DIR)
-    get_filename_component(CPPUTILS_DEPS_DIR ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
+    get_filename_component(CPPUTILS_DEPS_DIR ${CMAKE_CURRENT_BINARY_DIR}/deps ABSOLUTE)
     message("-- `CPPUTILS_DEPS_DIR` is not set. set `CPPUTILS_DEPS_DIR` to `${CPPUTILS_DEPS_DIR}`.")
 endif()
 
@@ -40,7 +40,7 @@ if(NOT TARGET cutils_static)
         GIT_TAG master
         SOURCE_DIR ${CPPUTILS_DEPS_DIR}/cutils
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/cutils-build
-        SUBBUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/cutils-subbuild)
+        SUBBUILD_DIR ${CPPUTILS_DEPS_DIR}/cutils-subbuild)
     FetchContent_MakeAvailable(cutils)
 endif()
 

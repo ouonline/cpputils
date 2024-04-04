@@ -4,6 +4,7 @@ using namespace cpputils;
 #undef NDEBUG
 #include <assert.h>
 #include <vector>
+#include <cstdlib>
 using namespace std;
 
 class TestAllocator final : public CompactAddrManager::Allocator {
