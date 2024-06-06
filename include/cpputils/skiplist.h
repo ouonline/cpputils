@@ -5,15 +5,24 @@
 #include "cutils/random/xoshiro256ss.h"
 #include <cstdint>
 #include <cstring>
-#include <functional>
+#include <utility>
 
 namespace cpputils {
 
-template <typename Key, typename Value, typename LessComparator,
+static constexpr uint32_t SKIPLIST_DIFF_LT = 0;
+static constexpr uint32_t SKIPLIST_DIFF_EQ = 1;
+static constexpr uint32_t SKIPLIST_DIFF_GT = 2;
+static constexpr uint32_t SKIPLIST_DIFF_GE = (SKIPLIST_DIFF_EQ | SKIPLIST_DIFF_GT);
+
+/*
+  `Comparator` has the form of `uint32_t func(const Key& a, const Key& b)`, which returns
+  `SKIPLIST_DIFF_LT`, `SKIPLIST_DIFF_EQ`, `SKIPLIST_DIFF_GT` for a < b, a == b, a > b, respectively.
+*/
+template <typename Key, typename Value, typename Comparator,
           typename GetKeyFromValue, typename Allocator>
 class SkipList final : public Allocator {
 private:
-    static constexpr uint32_t SKIPLIST_MAX_LEVEL = 8;
+    static constexpr uint32_t MAX_LEVEL = 12;
 
 private:
     struct DataNode final {
@@ -23,7 +32,7 @@ private:
 
     struct HeadNode final {
         uint32_t level;
-        DataNode* forward[SKIPLIST_MAX_LEVEL];
+        DataNode* forward[MAX_LEVEL];
     };
 
 public:
@@ -76,64 +85,59 @@ public:
     }
 
     ~SkipList() {
-        InnerDestroy();
+        DoDestroy();
     }
 
-    std::pair<Iterator, bool> Insert(const Value& value) {
+    template <typename ValueType>
+    std::pair<Iterator, bool> Insert(ValueType&& value) {
         const Key& key = m_get_key(value);
-        DataNode* update[SKIPLIST_MAX_LEVEL];
 
-        auto node = InnerLookupGreaterOrEqual(key, update);
-        if (node) {
-            auto pvalue = GetValueFromNode(node);
-            if (!m_less(key, m_get_key(*pvalue))) {
-                return std::pair<Iterator, bool>(Iterator(node), false);
-            }
+        uint32_t ge_diff = UINT32_MAX;
+        DataNode* update[MAX_LEVEL];
+        auto node = DoLookupGreaterEqual(key, &ge_diff, update);
+        if (node && (ge_diff == SKIPLIST_DIFF_EQ)) {
+            return std::pair<Iterator, bool>(Iterator(node), false);
         }
 
-        node = InnerInsert(value, update);
+        node = DoInsert(std::forward<ValueType>(value), update);
         return std::pair<Iterator, bool>(Iterator(node), (node != nullptr));
     }
 
-    bool Remove(const Key& key, Value* value = nullptr) {
-        return InnerRemove(key, value, [this, &key] (const Key& greater_or_equal_key) -> bool {
-            return (!m_less(key, greater_or_equal_key));
-        });
+    template <typename ValueType = Value>
+    bool Remove(const Key& key, ValueType* value = nullptr) {
+        return DoRemove(key, value, SKIPLIST_DIFF_EQ);
     }
 
-    bool RemoveGreaterOrEqual(const Key& key, Value* value = nullptr) {
-        return InnerRemove(key, value, [] (const Key&) -> bool {
-            return true;
-        });
+    template <typename ValueType = Value>
+    bool RemoveGreaterEqual(const Key& key, ValueType* value = nullptr) {
+        return DoRemove(key, value, SKIPLIST_DIFF_GE);
     }
 
     void Clear() {
-        InnerDestroy();
+        DoDestroy();
         memset(&m_head, 0, sizeof(HeadNode));
     }
 
     Iterator Lookup(const Key& key) const {
-        auto node = InnerLookupGreaterOrEqual(key);
-        if (node) {
-            auto pvalue = GetValueFromNode(node);
-            if (!m_less(key, m_get_key(*pvalue))) {
-                return Iterator(node);
-            }
+        uint32_t ge_diff = UINT32_MAX;
+        auto node = DoLookupGreaterEqual(key, &ge_diff);
+        if (node && (ge_diff == SKIPLIST_DIFF_EQ)) {
+            return Iterator(node);
         }
         return Iterator();
     }
 
-    Iterator LookupGreaterOrEqual(const Key& key) const {
-        auto node = InnerLookupGreaterOrEqual(key);
+    Iterator LookupGreaterEqual(const Key& key) const {
+        auto node = DoLookupGreaterEqual(key);
         return Iterator(node);
     }
 
     Iterator LookupLessThan(const Key& key) const {
-        auto prev = InnerLookupLessThan(key);
-        if (prev == (DataNode*)(&m_head)) {
+        auto node = DoLookupLessThan(key);
+        if (node == (DataNode*)(&m_head)) {
             return Iterator();
         }
-        return Iterator(prev);
+        return Iterator(node);
     }
 
     bool IsEmpty() const {
@@ -149,14 +153,19 @@ public:
     }
 
 private:
-    DataNode* InnerLookupLessThan(const Key& key, DataNode** update = nullptr) const {
+    // ge_diff: the greater or equal diff value of the lastest comparison
+    DataNode* DoLookupLessThan(const Key& key, uint32_t* ge_diff = nullptr, DataNode** update = nullptr) const {
         auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
             const uint32_t level = l - 1;
             auto node = prev->forward[level];
             while (node) {
                 auto pvalue = GetValueFromNode(node);
-                if (!m_less(m_get_key(*pvalue), key)) {
+                uint32_t cur_diff = m_cmp(m_get_key(*pvalue), key);
+                if (cur_diff & SKIPLIST_DIFF_GE) {
+                    if (ge_diff) {
+                        *ge_diff = cur_diff;
+                    }
                     break;
                 }
                 prev = node;
@@ -171,21 +180,20 @@ private:
         return prev;
     }
 
-    DataNode* InnerLookupGreaterOrEqual(const Key& key, DataNode** update = nullptr) const {
-        auto prev = InnerLookupLessThan(key, update);
-        return prev->forward[0];
+    DataNode* DoLookupGreaterEqual(const Key& key, uint32_t* ge_diff = nullptr, DataNode** update = nullptr) const {
+        auto node = DoLookupLessThan(key, ge_diff, update);
+        return node->forward[0];
     }
 
-    bool InnerRemove(const Key& key, Value* value,
-                     const std::function<bool (const Key& greater_or_equal_key)>& should_remove) {
-        DataNode* update[SKIPLIST_MAX_LEVEL];
-        auto node = InnerLookupGreaterOrEqual(key, update);
+    template <typename ValueType>
+    bool DoRemove(const Key& key, ValueType* value, uint32_t ge_diff_mask) {
+        uint32_t ge_diff = UINT32_MAX;
+        DataNode* update[MAX_LEVEL];
+        auto node = DoLookupGreaterEqual(key, &ge_diff, update);
         if (!node) {
             return false;
         }
-
-        auto pvalue = GetValueFromNode(node);
-        if (!should_remove(m_get_key(*pvalue))) {
+        if (!(ge_diff & ge_diff_mask)) {
             return false;
         }
 
@@ -196,8 +204,9 @@ private:
             update[level]->forward[level] = node->forward[level];
         }
 
+        auto pvalue = GetValueFromNode(node);
         if (value) {
-            *value = *pvalue;
+            *value = std::move(*pvalue);
         }
 
         pvalue->~Value();
@@ -210,7 +219,8 @@ private:
         return true;
     }
 
-    DataNode* InnerInsert(const Value& value, DataNode* update[]) {
+    template <typename ValueType>
+    DataNode* DoInsert(ValueType&& value, DataNode* update[]) {
         const uint32_t level = GenRandomLevel();
 
         auto base = (char*)this->Alloc(sizeof(Value) +
@@ -219,7 +229,7 @@ private:
         if (!base) {
             return nullptr;
         }
-        new (base) Value(value);
+        new (base) Value(std::forward<ValueType>(value));
 
         auto node = (DataNode*)(base + sizeof(Value));
         node->level = level;
@@ -240,7 +250,7 @@ private:
         return node;
     }
 
-    void InnerDestroy() {
+    void DoDestroy() {
         DataNode* cur = m_head.forward[0];
         while (cur) {
             auto next = cur->forward[0];
@@ -253,7 +263,7 @@ private:
 
     uint32_t GenRandomLevel() const {
         uint32_t level = 1;
-        while (level < SKIPLIST_MAX_LEVEL && xoshiro256ss_next(&m_rand) % 4 == 0) {
+        while (level < MAX_LEVEL && xoshiro256ss_next(&m_rand) % 4 == 0) {
             ++level;
         }
         return level;
@@ -265,7 +275,7 @@ private:
 
 private:
     HeadNode m_head;
-    LessComparator m_less;
+    Comparator m_cmp;
     GetKeyFromValue m_get_key;
     mutable Xoshiro256ss m_rand;
 
@@ -284,29 +294,42 @@ namespace internal {
 
 template <typename Value>
 struct SkipListReturnSelfFromValue final {
-    const Value& operator () (const Value& value) const {
+    const Value& operator()(const Value& value) const {
         return value;
     }
 };
 
 template <typename Key, typename Value>
 struct SkipListReturnFirstOfPair final {
-    const Key& operator () (const std::pair<Key, Value>& p) const {
+    const Key& operator()(const std::pair<Key, Value>& p) const {
         return p.first;
+    }
+};
+
+template <typename Key>
+struct GenericComparator final {
+    uint32_t operator()(const Key& a, const Key& b) const {
+        if (a == b) {
+            return SKIPLIST_DIFF_EQ;
+        }
+        if (a < b) {
+            return SKIPLIST_DIFF_LT;
+        }
+        return SKIPLIST_DIFF_GT;
     }
 };
 
 }
 
-template <typename Value, typename LessComparator = std::less<Value>,
+template <typename Value, typename Comparator = internal::GenericComparator<Value>,
           typename Allocator = GenericCpuAllocator>
-using SkipListSet = SkipList<Value, Value, LessComparator,
+using SkipListSet = SkipList<Value, Value, Comparator,
                              internal::SkipListReturnSelfFromValue<Value>,
                              Allocator>;
 
-template <typename Key, typename Value, typename LessComparator = std::less<Key>,
+template <typename Key, typename Value, typename Comparator = internal::GenericComparator<Key>,
           typename Allocator = GenericCpuAllocator>
-using SkipListMap = SkipList<Key, std::pair<Key, Value>, LessComparator,
+using SkipListMap = SkipList<Key, std::pair<Key, Value>, Comparator,
                              internal::SkipListReturnFirstOfPair<Key, Value>,
                              Allocator>;
 
