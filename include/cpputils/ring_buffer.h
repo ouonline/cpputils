@@ -1,5 +1,5 @@
-#ifndef __CPPUTILS_CIRCULAR_BUFFER_H__
-#define __CPPUTILS_CIRCULAR_BUFFER_H__
+#ifndef __CPPUTILS_RING_BUFFER_H__
+#define __CPPUTILS_RING_BUFFER_H__
 
 #include <stdint.h>
 #include <vector>
@@ -7,12 +7,19 @@
 namespace cpputils {
 
 template <typename T>
-class CircularBuffer final {
+class RingBuffer final {
 public:
-    CircularBuffer(uint32_t max_size) {
+    RingBuffer(uint32_t max_size) {
         m_tail = -1;
         m_head = m_size = 0;
         m_buffer.resize(max_size);
+    }
+
+    RingBuffer(std::vector<T>&& vec) {
+        m_head = 0;
+        m_tail = vec.size() - 1;
+        m_size = vec.size();
+        m_buffer = std::move(vec);
     }
 
     template <typename ItemType>
@@ -55,6 +62,14 @@ public:
     const T& At(uint32_t idx) const {
         auto pos = (m_head + idx) % m_buffer.size();
         return m_buffer[pos];
+    }
+
+    T& operator[](uint32_t idx) {
+        return At(idx);
+    }
+
+    const T& operator[](uint32_t idx) const {
+        return At(idx);
     }
 
 private:

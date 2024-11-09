@@ -12,5 +12,5 @@ target_link_libraries(test_skiplist PRIVATE cpputils_static)
 add_executable(test_compact_addr_manager test_compact_addr_manager.cpp)
 target_link_libraries(test_compact_addr_manager PRIVATE cpputils_static)
 
-add_executable(test_circular_buffer test_circular_buffer.cpp)
-target_link_libraries(test_circular_buffer PRIVATE cpputils_static)
+add_executable(test_ring_buffer test_ring_buffer.cpp)
+target_link_libraries(test_ring_buffer PRIVATE cpputils_static)
