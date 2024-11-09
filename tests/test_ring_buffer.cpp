@@ -1,4 +1,4 @@
-#include "cpputils/circular_buffer.h"
+#include "cpputils/ring_buffer.h"
 using namespace std;
 using namespace cpputils;
 
@@ -6,7 +6,7 @@ using namespace cpputils;
 #include <assert.h>
 
 int main(void) {
-    CircularBuffer<int> cb(2);
+    RingBuffer<int> cb(2);
     assert(cb.Size() == 0);
 
     cb.PushBack(10);
