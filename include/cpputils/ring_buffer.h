@@ -34,23 +34,27 @@ public:
         }
     }
 
-    uint32_t Size() const {
+    uint32_t size() const {
         return m_size;
     }
 
-    T& Front() {
+    uint32_t capacity() const {
+        return m_buffer.size();
+    }
+
+    T& front() {
         return m_buffer[m_head];
     }
 
-    const T& Front() const {
+    const T& front() const {
         return m_buffer[m_head];
     }
 
-    T& Back() {
+    T& back() {
         return m_buffer[m_tail];
     }
 
-    const T& Back() const {
+    const T& back() const {
         return m_buffer[m_tail];
     }
 
