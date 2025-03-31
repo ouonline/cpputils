@@ -9,10 +9,10 @@ namespace cpputils {
 template <typename T>
 class RingBuffer final {
 public:
-    RingBuffer(uint32_t max_size) {
+    RingBuffer(uint32_t capacity) {
         m_tail = -1;
         m_head = m_size = 0;
-        m_buffer.resize(max_size);
+        m_buffer.resize(capacity);
     }
 
     RingBuffer(std::vector<T>&& vec) {
@@ -20,6 +20,14 @@ public:
         m_tail = vec.size() - 1;
         m_size = vec.size();
         m_buffer = std::move(vec);
+    }
+
+    RingBuffer(RingBuffer&& rhs) {
+        DoMove(std::move(rhs));
+    }
+
+    void operator=(RingBuffer&& rhs) {
+        DoMove(std::move(rhs));
     }
 
     template <typename ItemType>
@@ -74,6 +82,16 @@ public:
 
     const T& operator[](uint32_t idx) const {
         return At(idx);
+    }
+
+private:
+    void DoMove(RingBuffer&& rhs) {
+        m_size = rhs.m_size;
+        m_head = rhs.m_head;
+        m_tail = rhs.m_tail;
+        m_buffer = std::move(rhs.m_buffer);
+        rhs.m_tail = -1;
+        rhs.m_head = rhs.m_size = 0;
     }
 
 private:
