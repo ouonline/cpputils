@@ -8,11 +8,16 @@ namespace cpputils {
 
 template <typename T>
 class RingBuffer final {
-public:
-    RingBuffer(uint32_t max_size) {
+private:
+    void Init(uint32_t max_size) {
         m_tail = -1;
         m_head = m_size = 0;
         m_buffer.resize(max_size);
+    }
+
+public:
+    RingBuffer(uint32_t max_size) {
+        Init(max_size);
     }
 
     RingBuffer(std::vector<T>&& vec) {
@@ -32,6 +37,16 @@ public:
         } else {
             ++m_size;
         }
+    }
+
+    bool IsEmpty() const {
+        return (m_size == 0);
+    }
+
+    void Clear() {
+        auto sz = m_buffer.size();
+        m_buffer.clear();
+        Init(sz);
     }
 
     uint32_t size() const {

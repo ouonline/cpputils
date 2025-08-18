@@ -8,6 +8,7 @@ using namespace cpputils;
 int main(void) {
     RingBuffer<int> cb(2);
     assert(cb.size() == 0);
+    assert(cb.IsEmpty());
 
     cb.PushBack(10);
     assert(cb.size() == 1);
@@ -28,6 +29,10 @@ int main(void) {
     assert(cb.size() == 2);
     assert(cb.front() == 30);
     assert(cb.back() == 40);
+    assert(!cb.IsEmpty());
+
+    cb.Clear();
+    assert(cb.IsEmpty());
 
     return 0;
 }
