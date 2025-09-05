@@ -9,52 +9,51 @@ namespace cpputils {
 template <typename T>
 class RingBuffer final {
 private:
-    void Init(uint32_t max_size) {
+    void Init() {
         m_tail = -1;
-        m_head = m_size = 0;
-        m_buffer.resize(max_size);
+        m_head = 0;
+        m_buffer.reserve(m_max_size);
     }
 
 public:
-    RingBuffer(uint32_t max_size) {
-        Init(max_size);
+    RingBuffer(uint32_t max_size) : m_max_size(max_size) {
+        Init();
     }
 
-    RingBuffer(std::vector<T>&& vec) {
+    RingBuffer(std::vector<T>&& vec, uint32_t max_size = UINT32_MAX)
+        : m_max_size((max_size == UINT32_MAX) ? vec.size() : max_size) {
         m_head = 0;
         m_tail = vec.size() - 1;
-        m_size = vec.size();
         m_buffer = std::move(vec);
     }
 
     template <typename ItemType>
     void PushBack(ItemType&& item) {
-        m_tail = (m_tail + 1) % m_buffer.size();
-        m_buffer[m_tail] = std::forward<ItemType>(item);
+        m_tail = (m_tail + 1) % m_max_size;
 
-        if (m_size == m_buffer.size()) {
-            m_head = (m_head + 1) % m_buffer.size();
+        if (m_buffer.size() == m_max_size) {
+            m_buffer[m_tail] = std::forward<ItemType>(item);
+            m_head = (m_head + 1) % m_max_size;
         } else {
-            ++m_size;
+            m_buffer.push_back(std::forward<ItemType>(item));
         }
     }
 
     bool IsEmpty() const {
-        return (m_size == 0);
+        return m_buffer.empty();
     }
 
     void Clear() {
-        auto sz = m_buffer.size();
         m_buffer.clear();
-        Init(sz);
+        Init();
     }
 
     uint32_t size() const {
-        return m_size;
+        return m_buffer.size();
     }
 
     uint32_t capacity() const {
-        return m_buffer.size();
+        return m_max_size;
     }
 
     T& front() {
@@ -92,7 +91,7 @@ public:
     }
 
 private:
-    uint32_t m_size;
+    const uint32_t m_max_size;
     uint32_t m_head, m_tail;
     std::vector<T> m_buffer;
 };
