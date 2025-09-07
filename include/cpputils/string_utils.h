@@ -30,7 +30,9 @@ private:
     unsigned int next_offset_;
 };
 
-inline std::vector<std::string> StringSplit(const std::string& text, const std::string& delim) {
+inline std::vector<std::string> StringSplit(const std::string& text,
+                                            const std::string& delim,
+                                            bool keep_empty = false) {
     std::vector<std::string> res;
 
     StringSplitter splitter(text.data(), text.size());
@@ -38,6 +40,9 @@ inline std::vector<std::string> StringSplit(const std::string& text, const std::
         auto ret_pair = splitter.Next(delim.data(), delim.size());
         if (!ret_pair.first) {
             break;
+        }
+        if (!keep_empty && ret_pair.second == 0) {
+            continue;
         }
         res.emplace_back(ret_pair.first, ret_pair.second);
     }
