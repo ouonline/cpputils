@@ -4,8 +4,7 @@ using namespace std;
 namespace cpputils {
 
 static const char* MemMem(const char* haystack, unsigned int haystack_len,
-                          const char* needle, unsigned int needle_len)
-{
+                          const char* needle, unsigned int needle_len) {
     if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
         return nullptr;
     }
@@ -19,9 +18,9 @@ static const char* MemMem(const char* haystack, unsigned int haystack_len,
     return nullptr;
 }
 
-string StringReplace(const char* text, unsigned int tlen,
-                     const char* search, unsigned int slen,
-                     const char* replace, unsigned int rlen) {
+string StringReplace(const char* text, unsigned int tlen, const char* search,
+                     unsigned int slen, const char* replace,
+                     unsigned int rlen) {
     string ret;
     const char* end = text + tlen;
 
@@ -45,8 +44,8 @@ string StringReplace(const char* text, unsigned int tlen,
     return ret;
 }
 
-bool StringEndsWith(const char* text, unsigned int tlen,
-                    const char* suffix, unsigned int slen) {
+bool StringEndsWith(const char* text, unsigned int tlen, const char* suffix,
+                    unsigned int slen) {
     if (tlen < slen) {
         return false;
     }
@@ -67,7 +66,8 @@ unsigned int StringTrim(const char* text, unsigned int tlen, char c) {
     return (tlen - pos);
 }
 
-pair<const char*, unsigned int> StringSplitter::Next(const char* delim, unsigned int delim_len) {
+pair<const char*, unsigned int> StringSplitter::Next(const char* delim,
+                                                     unsigned int delim_len) {
     if (next_offset_ > l_) {
         return make_pair(nullptr, 0);
     }

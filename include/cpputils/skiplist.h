@@ -12,11 +12,13 @@ namespace cpputils {
 static constexpr uint32_t SKIPLIST_DIFF_LT = 0;
 static constexpr uint32_t SKIPLIST_DIFF_EQ = 1;
 static constexpr uint32_t SKIPLIST_DIFF_GT = 2;
-static constexpr uint32_t SKIPLIST_DIFF_GE = (SKIPLIST_DIFF_EQ | SKIPLIST_DIFF_GT);
+static constexpr uint32_t SKIPLIST_DIFF_GE =
+    (SKIPLIST_DIFF_EQ | SKIPLIST_DIFF_GT);
 
 /*
-  `Comparator` has the form of `uint32_t func(const Key& a, const Key& b)`, which returns
-  `SKIPLIST_DIFF_LT`, `SKIPLIST_DIFF_EQ`, `SKIPLIST_DIFF_GT` for a < b, a == b, a > b, respectively.
+  `Comparator` has the form of `uint32_t func(const Key& a, const Key& b)`,
+  which returns `SKIPLIST_DIFF_LT`, `SKIPLIST_DIFF_EQ`, `SKIPLIST_DIFF_GT` for a
+  < b, a == b, a > b, respectively.
 */
 template <typename Key, typename Value, typename Comparator,
           typename GetKeyFromValue, typename Allocator>
@@ -38,25 +40,25 @@ private:
 public:
     class Iterator final {
     public:
-        Value* operator-> () {
+        Value* operator->() {
             return m_value;
         }
-        const Value* operator-> () const {
+        const Value* operator->() const {
             return m_value;
         }
-        Value& operator* () {
+        Value& operator*() {
             return *m_value;
         }
-        const Value& operator* () const {
+        const Value& operator*() const {
             return *m_value;
         }
-        bool operator== (const Iterator& it) const {
+        bool operator==(const Iterator& it) const {
             return (m_node == it.m_node);
         }
-        bool operator!= (const Iterator& it) const {
+        bool operator!=(const Iterator& it) const {
             return (m_node != it.m_node);
         }
-        void operator++ () {
+        void operator++() {
             m_node = m_node->forward[0];
             if (m_node) {
                 m_value = GetValueFromNode(m_node);
@@ -154,7 +156,8 @@ public:
 
 private:
     // ge_diff: the greater or equal diff value of the lastest comparison
-    DataNode* DoLookupLessThan(const Key& key, uint32_t* ge_diff = nullptr, DataNode** update = nullptr) const {
+    DataNode* DoLookupLessThan(const Key& key, uint32_t* ge_diff = nullptr,
+                               DataNode** update = nullptr) const {
         auto prev = (DataNode*)(&m_head);
         for (uint32_t l = prev->level; l > 0; --l) {
             const uint32_t level = l - 1;
@@ -180,7 +183,8 @@ private:
         return prev;
     }
 
-    DataNode* DoLookupGreaterEqual(const Key& key, uint32_t* ge_diff = nullptr, DataNode** update = nullptr) const {
+    DataNode* DoLookupGreaterEqual(const Key& key, uint32_t* ge_diff = nullptr,
+                                   DataNode** update = nullptr) const {
         auto node = DoLookupLessThan(key, ge_diff, update);
         return node->forward[0];
     }
@@ -223,8 +227,7 @@ private:
     DataNode* DoInsert(ValueType&& value, DataNode* update[]) {
         const uint32_t level = GenRandomLevel();
 
-        auto base = (char*)this->Alloc(sizeof(Value) +
-                                       sizeof(DataNode) +
+        auto base = (char*)this->Alloc(sizeof(Value) + sizeof(DataNode) +
                                        (sizeof(DataNode*) * level));
         if (!base) {
             return nullptr;
@@ -321,17 +324,19 @@ struct GenericComparator final {
 
 }
 
-template <typename Value, typename Comparator = internal::GenericComparator<Value>,
+template <typename Value,
+          typename Comparator = internal::GenericComparator<Value>,
           typename Allocator = GenericCpuAllocator>
-using SkipListSet = SkipList<Value, Value, Comparator,
-                             internal::SkipListReturnSelfFromValue<Value>,
-                             Allocator>;
+using SkipListSet =
+    SkipList<Value, Value, Comparator,
+             internal::SkipListReturnSelfFromValue<Value>, Allocator>;
 
-template <typename Key, typename Value, typename Comparator = internal::GenericComparator<Key>,
+template <typename Key, typename Value,
+          typename Comparator = internal::GenericComparator<Key>,
           typename Allocator = GenericCpuAllocator>
-using SkipListMap = SkipList<Key, std::pair<Key, Value>, Comparator,
-                             internal::SkipListReturnFirstOfPair<Key, Value>,
-                             Allocator>;
+using SkipListMap =
+    SkipList<Key, std::pair<Key, Value>, Comparator,
+             internal::SkipListReturnFirstOfPair<Key, Value>, Allocator>;
 
 }
 

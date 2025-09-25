@@ -140,7 +140,8 @@ uint64_t diff_time_usec(struct timeval end, const struct timeval* begin) {
         --end.tv_sec;
         end.tv_usec += 1000000;
     }
-    return (end.tv_sec - begin->tv_sec) * 1000000 + (end.tv_usec - begin->tv_usec);
+    return (end.tv_sec - begin->tv_sec) * 1000000 +
+        (end.tv_usec - begin->tv_usec);
 }
 
 static void TestPerf() {
@@ -164,9 +165,10 @@ static void TestPerf() {
     }
     gettimeofday(&sl_end, nullptr);
 
-    cout << "skiplist insert cost " << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
-         << "std::set insert cost " << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms."
-         << endl;
+    cout << "skiplist insert cost "
+         << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
+         << "std::set insert cost "
+         << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms." << endl;
 
     cout << "----- test lookup perf -----" << endl;
 
@@ -182,23 +184,27 @@ static void TestPerf() {
     }
     gettimeofday(&sl_end, nullptr);
 
-    cout << "skiplist lookup cost " << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
-         << "std::set lookup cost " << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms."
-         << endl;
+    cout << "skiplist lookup cost "
+         << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
+         << "std::set lookup cost "
+         << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms." << endl;
 
     cout << "----- test traversal perf -----" << endl;
 
     gettimeofday(&st_begin, nullptr);
-    for (auto it = st.begin(); it != st.end(); ++it);
+    for (auto it = st.begin(); it != st.end(); ++it)
+        ;
     gettimeofday(&st_end, nullptr);
 
     gettimeofday(&sl_begin, nullptr);
-    for (auto it = sl.GetBeginIterator(); it != sl.GetEndIterator(); ++it);
+    for (auto it = sl.GetBeginIterator(); it != sl.GetEndIterator(); ++it)
+        ;
     gettimeofday(&sl_end, nullptr);
 
-    cout << "skiplist traversal cost " << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
-         << "std::set traversal cost " << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms."
-         << endl;
+    cout << "skiplist traversal cost "
+         << diff_time_usec(sl_end, &sl_begin) / 1000.0 << " ms, "
+         << "std::set traversal cost "
+         << diff_time_usec(st_end, &st_begin) / 1000.0 << " ms." << endl;
 }
 
 int main(void) {

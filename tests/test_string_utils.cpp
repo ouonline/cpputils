@@ -47,17 +47,17 @@ static void TestStringReplace() {
     const string text = "1ecb2ecb3ecbecbecb4444ecb5ecb";
     const string search = "ecb";
     const string replace = "x";
-    cout << "after replace 1 -> " << StringReplace(text.data(), text.size(),
-                                                   search.data(), search.size(),
-                                                   replace.data(), replace.size())
+    cout << "after replace 1 -> "
+         << StringReplace(text.data(), text.size(), search.data(),
+                          search.size(), replace.data(), replace.size())
          << endl
-         << "after replace 3 -> " << StringReplace(text.data(), text.size(),
-                                                   search.data(), search.size(),
-                                                   replace.data(), replace.size())
+         << "after replace 3 -> "
+         << StringReplace(text.data(), text.size(), search.data(),
+                          search.size(), replace.data(), replace.size())
          << endl
-         << "after replace all -> " << StringReplace(text.data(), text.size(),
-                                                     search.data(), search.size(),
-                                                     replace.data(), replace.size())
+         << "after replace all -> "
+         << StringReplace(text.data(), text.size(), search.data(),
+                          search.size(), replace.data(), replace.size())
          << endl;
 }
 

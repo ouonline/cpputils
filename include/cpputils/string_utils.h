@@ -12,17 +12,19 @@ std::string StringReplace(const char* text, unsigned int tlen,
                           const char* search, unsigned int slen,
                           const char* replace, unsigned int rlen);
 
-bool StringEndsWith(const char* text, unsigned int tlen,
-                    const char* suffix, unsigned int slen);
+bool StringEndsWith(const char* text, unsigned int tlen, const char* suffix,
+                    unsigned int slen);
 
 // reutrns the number of chars removed at the end of `text`
 unsigned int StringTrim(const char* text, unsigned int tlen, char c);
 
 class StringSplitter final {
 public:
-    StringSplitter(const char* s, unsigned int l) : s_(s), l_(l), next_offset_(0) {}
+    StringSplitter(const char* s, unsigned int l)
+        : s_(s), l_(l), next_offset_(0) {}
     /* string ends if pair::first is null */
-    std::pair<const char*, unsigned int> Next(const char* delim, unsigned int delim_len);
+    std::pair<const char*, unsigned int> Next(const char* delim,
+                                              unsigned int delim_len);
 
 private:
     const char* s_;

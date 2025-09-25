@@ -13,7 +13,8 @@ public:
     public:
         virtual ~Allocator() {}
         virtual uint64_t GetAllocatedSize() const = 0;
-        /** returns the starting addr and size allocated, or <UINTPTR_MAX, undefined> if failed. */
+        /** returns the starting addr and size allocated, or <UINTPTR_MAX,
+         * undefined> if failed. */
         virtual std::pair<uintptr_t, uint64_t> Alloc(uint64_t needed) = 0;
     };
 
@@ -22,7 +23,8 @@ public:
         virtual ~VMAllocator() {}
         virtual uintptr_t GetReservedBase() const = 0;
         virtual uint64_t GetAllocatedSize() const = 0;
-        /** acquires `needed` from the end position and returns the actual size allocated or 0 if failed. */
+        /** acquires `needed` from the end position and returns the actual size
+         * allocated or 0 if failed. */
         virtual uint64_t Extend(uint64_t needed) = 0;
     };
 

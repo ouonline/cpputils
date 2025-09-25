@@ -8,8 +8,12 @@ namespace cpputils {
 
 class GenericCpuAllocator : public Allocator {
 public:
-    void* Alloc(uint64_t bytes) override { return ::malloc(bytes); }
-    void Free(void* ptr) override { ::free(ptr); }
+    void* Alloc(uint64_t bytes) override {
+        return ::malloc(bytes);
+    }
+    void Free(void* ptr) override {
+        ::free(ptr);
+    }
 };
 
 }
