@@ -12,7 +12,7 @@ static void test_init() {
     }
     {
         FileMapping fm;
-        assert(!fm.Init("nonexist",FileMapping::READ));
+        assert(!fm.Init("nonexist", FileMapping::READ));
     }
 }
 
