@@ -17,3 +17,6 @@ target_link_libraries(test_ring_buffer PRIVATE cpputils_static)
 
 add_executable(test_file_mapping test_file_mapping.cpp)
 target_link_libraries(test_file_mapping PRIVATE cpputils_static)
+
+add_executable(test_intrusive_list test_intrusive_list.cpp)
+target_link_libraries(test_intrusive_list PRIVATE cpputils_static)
