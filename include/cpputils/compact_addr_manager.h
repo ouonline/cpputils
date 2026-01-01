@@ -29,8 +29,8 @@ public:
     };
 
 public:
-    CompactAddrManager(Allocator* ar) : ar_(ar) {}
-    CompactAddrManager(VMAllocator* mgr) : vmr_(mgr) {}
+    CompactAddrManager(Allocator* ar) : m_ar(ar) {}
+    CompactAddrManager(VMAllocator* mgr) : m_vmr(mgr) {}
 
     /** returns UINTPTR_MAX if failed. */
     uintptr_t Alloc(uint64_t size);
@@ -42,10 +42,10 @@ private:
     uintptr_t AllocByVMAllocator(uint64_t needed);
 
 private:
-    Allocator* ar_ = nullptr;
-    VMAllocator* vmr_ = nullptr;
-    std::map<uintptr_t, uint64_t> addr2size_;
-    std::map<uint64_t, std::set<uintptr_t>> size2addr_;
+    Allocator* m_ar = nullptr;
+    VMAllocator* m_vmr = nullptr;
+    std::map<uintptr_t, uint64_t> m_addr2size;
+    std::map<uint64_t, std::set<uintptr_t>> m_size2addr;
 
 private:
     CompactAddrManager(const CompactAddrManager&) = delete;

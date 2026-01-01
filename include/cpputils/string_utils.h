@@ -21,15 +21,15 @@ unsigned int StringTrim(const char* text, unsigned int tlen, char c);
 class StringSplitter final {
 public:
     StringSplitter(const char* s, unsigned int l)
-        : s_(s), l_(l), next_offset_(0) {}
+        : m_str(s), m_len(l), m_next_offset(0) {}
     /* string ends if pair::first is null */
     std::pair<const char*, unsigned int> Next(const char* delim,
                                               unsigned int delim_len);
 
 private:
-    const char* s_;
-    unsigned int l_;
-    unsigned int next_offset_;
+    const char* m_str;
+    unsigned int m_len;
+    unsigned int m_next_offset;
 };
 
 inline std::vector<std::string> StringSplit(const std::string& text,
@@ -48,6 +48,7 @@ inline std::vector<std::string> StringSplit(const std::string& text,
         }
         res.emplace_back(ret_pair.first, ret_pair.second);
     }
+
     return res;
 }
 

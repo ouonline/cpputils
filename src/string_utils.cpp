@@ -68,26 +68,26 @@ unsigned int StringTrim(const char* text, unsigned int tlen, char c) {
 
 pair<const char*, unsigned int> StringSplitter::Next(const char* delim,
                                                      unsigned int delim_len) {
-    if (next_offset_ > l_) {
+    if (m_next_offset > m_len) {
         return make_pair(nullptr, 0);
     }
 
-    auto text = s_ + next_offset_;
+    auto text = m_str + m_next_offset;
 
     // the last empty field
-    if (next_offset_ == l_) {
-        ++next_offset_;
+    if (m_next_offset == m_len) {
+        ++m_next_offset;
         return make_pair(text, 0);
     }
 
-    auto text_len = l_ - next_offset_;
+    auto text_len = m_len - m_next_offset;
     auto cursor = MemMem(text, text_len, delim, delim_len);
     if (cursor) {
-        next_offset_ = cursor + delim_len - s_;
+        m_next_offset = cursor + delim_len - m_str;
         return make_pair(text, cursor - text);
     }
 
-    next_offset_ = l_;
+    m_next_offset = m_len;
     return make_pair(text, text_len);
 }
 
