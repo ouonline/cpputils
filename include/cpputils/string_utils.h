@@ -20,37 +20,20 @@ unsigned int StringTrim(const char* text, unsigned int tlen, char c);
 
 class StringSplitter final {
 public:
-    StringSplitter(const char* s, unsigned int l)
-        : m_str(s), m_len(l), m_next_offset(0) {}
+    StringSplitter() : m_cursor(nullptr), m_end(nullptr) {}
+    StringSplitter(const char* s, unsigned int l) : m_cursor(s), m_end(s + l) {}
+    void Reset(const char* s, unsigned int l) {
+        m_cursor = s;
+        m_end = s + l;
+    }
     /* string ends if pair::first is null */
     std::pair<const char*, unsigned int> Next(const char* delim,
-                                              unsigned int delim_len);
+                                              unsigned int dlen);
 
 private:
-    const char* m_str;
-    unsigned int m_len;
-    unsigned int m_next_offset;
+    const char* m_cursor;
+    const char* m_end;
 };
-
-inline std::vector<std::string> StringSplit(const std::string& text,
-                                            const std::string& delim,
-                                            bool keep_empty = false) {
-    std::vector<std::string> res;
-
-    StringSplitter splitter(text.data(), text.size());
-    while (true) {
-        auto ret_pair = splitter.Next(delim.data(), delim.size());
-        if (!ret_pair.first) {
-            break;
-        }
-        if (!keep_empty && ret_pair.second == 0) {
-            continue;
-        }
-        res.emplace_back(ret_pair.first, ret_pair.second);
-    }
-
-    return res;
-}
 
 }
 

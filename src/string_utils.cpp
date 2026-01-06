@@ -3,47 +3,6 @@ using namespace std;
 
 namespace cpputils {
 
-static const char* MemMem(const char* haystack, unsigned int haystack_len,
-                          const char* needle, unsigned int needle_len) {
-    if (!haystack || haystack_len == 0 || !needle || needle_len == 0) {
-        return nullptr;
-    }
-
-    for (auto h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
-        if (memcmp(h, needle, needle_len) == 0) {
-            return h;
-        }
-    }
-
-    return nullptr;
-}
-
-string StringReplace(const char* text, unsigned int tlen, const char* search,
-                     unsigned int slen, const char* replace,
-                     unsigned int rlen) {
-    string ret;
-    const char* end = text + tlen;
-
-    while (text < end) {
-        auto cursor = MemMem(text, tlen, search, slen);
-        if (!cursor) {
-            return ret + string(text, tlen);
-        }
-
-        if (cursor > text) {
-            ret.append(text, cursor - text);
-        }
-
-        ret.append(replace, rlen);
-
-        cursor += slen;
-        text = cursor;
-        tlen = end - cursor;
-    }
-
-    return ret;
-}
-
 bool StringEndsWith(const char* text, unsigned int tlen, const char* suffix,
                     unsigned int slen) {
     if (tlen < slen) {
@@ -66,29 +25,76 @@ unsigned int StringTrim(const char* text, unsigned int tlen, char c) {
     return (tlen - pos);
 }
 
+static const char* MemMem(const char* text, unsigned int tlen,
+                          const char* pattern, unsigned int plen) {
+    for (auto s = text; tlen >= plen; ++s, --tlen) {
+        if (memcmp(s, pattern, plen) == 0) {
+            return s;
+        }
+    }
+    return nullptr;
+}
+
+string StringReplace(const char* text, unsigned int tlen, const char* search,
+                     unsigned int slen, const char* replace,
+                     unsigned int rlen) {
+    if (!text || tlen == 0) {
+        return string();
+    }
+    if (!search || slen == 0 || !replace || rlen == 0) {
+        return string(text, tlen);
+    }
+
+    string ret;
+    const char* end = text + tlen;
+    while (text < end) {
+        auto cursor = MemMem(text, tlen, search, slen);
+        if (!cursor) {
+            return ret + string(text, tlen);
+        }
+
+        if (cursor > text) {
+            ret.append(text, cursor - text);
+        }
+
+        ret.append(replace, rlen);
+
+        cursor += slen;
+        text = cursor;
+        tlen = end - cursor;
+    }
+
+    return ret;
+}
+
 pair<const char*, unsigned int> StringSplitter::Next(const char* delim,
-                                                     unsigned int delim_len) {
-    if (m_next_offset > m_len) {
+                                                     unsigned int dlen) {
+    if (m_cursor > m_end) {
         return make_pair(nullptr, 0);
     }
 
-    auto text = m_str + m_next_offset;
-
     // the last empty field
-    if (m_next_offset == m_len) {
-        ++m_next_offset;
-        return make_pair(text, 0);
+    if (m_cursor == m_end) {
+        ++m_cursor;
+        return make_pair(m_end, 0);
     }
 
-    auto text_len = m_len - m_next_offset;
-    auto cursor = MemMem(text, text_len, delim, delim_len);
-    if (cursor) {
-        m_next_offset = cursor + delim_len - m_str;
-        return make_pair(text, cursor - text);
+    const char* begin = m_cursor;
+
+    const char* end;
+    if (dlen == 1) {
+        end = (const char*)memchr(m_cursor, *delim, m_end - m_cursor);
+    } else {
+        end = MemMem(m_cursor, m_end - m_cursor, delim, dlen);
     }
 
-    m_next_offset = m_len;
-    return make_pair(text, text_len);
+    if (end) {
+        m_cursor = end + dlen;
+        return make_pair(begin, end - begin);
+    }
+
+    m_cursor = m_end + 1;
+    return make_pair(begin, m_end - begin);
 }
 
 }

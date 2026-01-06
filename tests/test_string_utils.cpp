@@ -7,40 +7,38 @@ using namespace std;
 #undef NDEBUG
 #include <assert.h>
 
+static vector<string> StringSplit(const string& text, const string& delim,
+                                  bool skip_empty) {
+    vector<string> res;
+    StringSplitter splitter(text.data(), text.size());
+    while (true) {
+        auto ret_pair = splitter.Next(",", 1);
+        if (!ret_pair.first) {
+            break;
+        }
+        if (skip_empty && ret_pair.second == 0) {
+            continue;
+        }
+        res.emplace_back(ret_pair.first, ret_pair.second);
+    }
+    return res;
+}
+
 static void TestStringSplitter() {
-    const char* text = "abc,,de,f,g,,";
-    StringSplitter splitter(text, strlen(text));
+    string text = "abc,,de,f,g,,";
+    vector<string> expected = {"abc", "", "de", "f", "g", "", ""};
+    vector<string> ret = StringSplit(text, ",", false);
+    assert(ret == expected);
 
-    auto ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string("abc"));
+    text = "abc,,de,f,g";
+    expected = {"abc", "", "de", "f", "g"};
+    ret = StringSplit(text, ",", false);
+    assert(ret == expected);
 
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string());
-
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string("de"));
-
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string("f"));
-
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string("g"));
-
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string());
-
-    ret_pair = splitter.Next(",", 1);
-    assert(ret_pair.first);
-    assert(string(ret_pair.first, ret_pair.second) == string());
-
-    ret_pair = splitter.Next(",", 1);
-    assert(!ret_pair.first);
+    text = "abc,,de,f,g,,";
+    expected = {"abc", "de", "f", "g"};
+    ret = StringSplit(text, ",", true);
+    assert(ret == expected);
 }
 
 static void TestStringReplace() {
